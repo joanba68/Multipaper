@@ -28,3 +28,7 @@ jobs:
         with:
           name: multipaper-master.jar
           path: MultiPaper-Master/build/libs/multipaper-master*.jar
+      - name: Publish package
+        run: ./gradlew publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
