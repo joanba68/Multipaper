@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Stepan Klymonchuk <stepanstepan0000@gmail.com>
+Date: Mon, 25 Nov 2024 10:57:31 +0000
+Subject: [PATCH] Add getExternalServerName
+
+
+diff --git a/src/main/java/org/bukkit/Chunk.java b/src/main/java/org/bukkit/Chunk.java
+index 8f35880c12e16a8ed7f1ef7d3fd9df5cd2569d7b..184738d0471be2426c0c3b2107a02396d6b48187 100644
+--- a/src/main/java/org/bukkit/Chunk.java
++++ b/src/main/java/org/bukkit/Chunk.java
+@@ -210,6 +210,13 @@ public interface Chunk extends PersistentDataHolder {
+      */
+     public boolean isLocalChunk();
+ 
++    /**
++     * Gets the bungeecord server name of the external server that this chunk is running on.
++     *
++     * @return The name of the external server that this chunk is running on, or null if the chunk is running on this server.
++     */
++    public String getExternalServerName();
++
+     // MultiPaper end
+ 
+     /**

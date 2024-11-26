@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Stepan Klymonchuk <stepanstepan0000@gmail.com>
+Date: Mon, 25 Nov 2024 10:57:47 +0000
+Subject: [PATCH] Add getExternalServerName
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftChunk.java b/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
+index d16ae38e4e1b244f90f3e4afda965b1c7e7f2094..c60d8f041aa77f8591cec65310c58c45849e5dc2 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
+@@ -219,6 +219,11 @@ public class CraftChunk implements Chunk {
+         return MultiPaper.isChunkLocal(this);
+     }
+ 
++    @Override
++    public String getExternalServerName() {
++        return isExternalChunk() ? worldServer.chunkTaskScheduler.chunkHolderManager.getChunkHolder(x, z).externalOwner.getName() : null;
++    }
++
+     // MultiPaper end
+ 
+     @Override
