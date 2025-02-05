@@ -32,3 +32,16 @@ jobs:
         run: ./gradlew :MultiPaper-API:publish --stacktrace
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rename artifact
+        run: mv build/libs/multipaper-paperclip-*-reobf.jar build/libs/multipaper.jar && mv MultiPaper-Master/build/libs/multipaper-master*.jar build/libs/multipaper-master.jar
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        id: release
+        with:
+          files: |
+            build/libs/multipaper.jar
+            build/libs/multipaper-master.jar
+          generate_release_notes: true
+          name: Build ${{ github.run_number }}
+          fail_on_unmatched_files: true
+          draft: true
