@@ -3,6 +3,7 @@ package puregero.multipaper.server.velocity;
 import com.google.inject.Inject;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
@@ -17,6 +18,7 @@ import puregero.multipaper.server.ServerConnection;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -57,16 +59,25 @@ public class MultiPaperVelocity {
         ServerConnection.addListener(new ServerConnection.Listener() {
             @Override
             public void onConnect(ServerConnection.ServerConnectionInfo connection) {
-                server.registerServer(new ServerInfo(connection.name(), connection.address()));
+                server.registerServer(
+                        new ServerInfo(connection.name(), new InetSocketAddress(connection.host(), connection.port()))
+                );
                 logger.info("Registered server {}", connection.name());
             }
 
             @Override
             public void onDisconnect(ServerConnection.ServerConnectionInfo connection) {
-                server.unregisterServer(new ServerInfo(connection.name(), connection.address()));
+                server.unregisterServer(
+                        new ServerInfo(connection.name(), new InetSocketAddress(connection.host(), connection.port()))
+                );
                 logger.info("Unregistered server {}", connection.name());
             }
         });
+    }
+
+    @Subscribe
+    public void onPlayerChooseInitialServer(PlayerChooseInitialServerEvent event) {
+        event.setInitialServer(server.getAllServers().stream().findAny().orElse(null));
     }
 
     @Subscribe

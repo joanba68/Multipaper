@@ -41,7 +41,7 @@ public class ServerConnection extends MasterBoundMessageHandler {
             ServerConnection connection,
             String name,
             String host,
-            InetSocketAddress address,
+            int port,
             UUID uuid
     ) {}
 
@@ -133,12 +133,6 @@ public class ServerConnection extends MasterBoundMessageHandler {
         host = ((InetSocketAddress) getAddress()).getAddress().getHostAddress();
         uuid = message.serverUuid;
 
-        synchronized (listeners) {
-            listeners.forEach(listener -> listener.onConnect(
-                    new ServerConnectionInfo(this, name, host, (InetSocketAddress) getAddress(), uuid)
-            ));
-        }
-
         synchronized (connections) {
             connections.add(this);
             ServerConnection oldConnectionWithSameName = connectionMap.put(name, this);
@@ -174,7 +168,7 @@ public class ServerConnection extends MasterBoundMessageHandler {
 
         synchronized (listeners) {
             listeners.forEach(listener -> listener.onDisconnect(
-                    new ServerConnectionInfo(this, name, host, (InetSocketAddress) getAddress(), uuid)
+                    new ServerConnectionInfo(this, name, host, port, uuid)
             ));
         }
 
@@ -237,6 +231,11 @@ public class ServerConnection extends MasterBoundMessageHandler {
 
     public void setPort(int port) {
         this.port = port;
+        synchronized (listeners) {
+            listeners.forEach(listener -> listener.onConnect(
+                    new ServerConnectionInfo(this, name, host, port, uuid)
+            ));
+        }
     }
 
     public String getHost() {
