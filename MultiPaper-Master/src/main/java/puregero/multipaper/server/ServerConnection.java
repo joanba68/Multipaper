@@ -35,6 +35,33 @@ public class ServerConnection extends MasterBoundMessageHandler {
     private static final Map<String, ServerConnection> connectionMap = new ConcurrentHashMap<>();
     private static final List<ServerConnection> connections = new CopyOnWriteArrayList<>();
 
+    private static final List<Listener> listeners = new ArrayList<>();
+
+    public record ServerConnectionInfo(
+            ServerConnection connection,
+            String name,
+            String host,
+            InetSocketAddress address,
+            UUID uuid
+    ) {}
+
+    public interface Listener {
+        void onConnect(ServerConnectionInfo connection);
+        void onDisconnect(ServerConnectionInfo connection);
+    }
+
+    public static void addListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    public static void removeListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
     public static void shutdown() {
         broadcastAll(new ShutdownMessage());
     }
@@ -106,6 +133,12 @@ public class ServerConnection extends MasterBoundMessageHandler {
         host = ((InetSocketAddress) getAddress()).getAddress().getHostAddress();
         uuid = message.serverUuid;
 
+        synchronized (listeners) {
+            listeners.forEach(listener -> listener.onConnect(
+                    new ServerConnectionInfo(this, name, host, (InetSocketAddress) getAddress(), uuid)
+            ));
+        }
+
         synchronized (connections) {
             connections.add(this);
             ServerConnection oldConnectionWithSameName = connectionMap.put(name, this);
@@ -138,6 +171,12 @@ public class ServerConnection extends MasterBoundMessageHandler {
     public void channelInactive(ChannelHandlerContext ctx) {
         EntitiesSubscriptionManager.unsubscribeAll(this);
         ChunkSubscriptionManager.unsubscribeAndUnlockAll(this);
+
+        synchronized (listeners) {
+            listeners.forEach(listener -> listener.onDisconnect(
+                    new ServerConnectionInfo(this, name, host, (InetSocketAddress) getAddress(), uuid)
+            ));
+        }
 
         synchronized (connections) {
             connections.remove(this);

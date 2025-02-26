@@ -9,6 +9,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import org.slf4j.Logger;
 import puregero.multipaper.server.MultiPaperServer;
 import puregero.multipaper.server.ServerConnection;
@@ -48,6 +49,24 @@ public class MultiPaperVelocity {
         this.balanceNodes = config.getBoolean("balance-nodes", true);
 
         new MultiPaperServer(this.port);
+
+        server.getAllServers().forEach(s -> {
+            server.unregisterServer(s.getServerInfo());
+        });
+
+        ServerConnection.addListener(new ServerConnection.Listener() {
+            @Override
+            public void onConnect(ServerConnection.ServerConnectionInfo connection) {
+                server.registerServer(new ServerInfo(connection.name(), connection.address()));
+                logger.info("Registered server {}", connection.name());
+            }
+
+            @Override
+            public void onDisconnect(ServerConnection.ServerConnectionInfo connection) {
+                server.unregisterServer(new ServerInfo(connection.name(), connection.address()));
+                logger.info("Unregistered server {}", connection.name());
+            }
+        });
     }
 
     @Subscribe
