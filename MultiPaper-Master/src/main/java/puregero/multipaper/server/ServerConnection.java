@@ -35,6 +35,33 @@ public class ServerConnection extends MasterBoundMessageHandler {
     private static final Map<String, ServerConnection> connectionMap = new ConcurrentHashMap<>();
     private static final List<ServerConnection> connections = new CopyOnWriteArrayList<>();
 
+    private static final List<Listener> listeners = new ArrayList<>();
+
+    public record ServerConnectionInfo(
+            ServerConnection connection,
+            String name,
+            String host,
+            int port,
+            UUID uuid
+    ) {}
+
+    public interface Listener {
+        void onConnect(ServerConnectionInfo connection);
+        void onDisconnect(ServerConnectionInfo connection);
+    }
+
+    public static void addListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    public static void removeListener(Listener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
     public static void shutdown() {
         broadcastAll(new ShutdownMessage());
     }
@@ -139,6 +166,12 @@ public class ServerConnection extends MasterBoundMessageHandler {
         EntitiesSubscriptionManager.unsubscribeAll(this);
         ChunkSubscriptionManager.unsubscribeAndUnlockAll(this);
 
+        synchronized (listeners) {
+            listeners.forEach(listener -> listener.onDisconnect(
+                    new ServerConnectionInfo(this, name, host, port, uuid)
+            ));
+        }
+
         synchronized (connections) {
             connections.remove(this);
         }
@@ -198,6 +231,11 @@ public class ServerConnection extends MasterBoundMessageHandler {
 
     public void setPort(int port) {
         this.port = port;
+        synchronized (listeners) {
+            listeners.forEach(listener -> listener.onConnect(
+                    new ServerConnectionInfo(this, name, host, port, uuid)
+            ));
+        }
     }
 
     public String getHost() {
