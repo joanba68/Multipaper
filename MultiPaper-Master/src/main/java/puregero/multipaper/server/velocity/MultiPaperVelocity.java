@@ -88,15 +88,16 @@ public class MultiPaperVelocity {
             Collection<RegisteredServer> servers = this.server.getAllServers();
 
             RegisteredServer bestServer = null;
-            long lowestTickTime = Long.MAX_VALUE;
+            long bestQuality = Long.MAX_VALUE;
 
             for (RegisteredServer server : servers) {
                 String serverName = server.getServerInfo().getName();
+                long players = server.getPlayersConnected().size();
                 ServerConnection connection = ServerConnection.getConnection(serverName);
 
                 if (connection != null && ServerConnection.isAlive(serverName)
-                        && connection.getTimer().averageInMillis() < lowestTickTime) {
-                    lowestTickTime = connection.getTimer().averageInMillis();
+                        && (connection.getTimer().averageInMillis() * 5 + players < bestQuality)) {
+                    bestQuality = connection.getTimer().averageInMillis() * 5 + players;
                     bestServer = server;
                 }
             }
