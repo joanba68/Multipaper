@@ -24,8 +24,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Plugin(id = "multipaper-velocity",
     name = "MultiPaper Velocity",
@@ -39,6 +43,8 @@ public class MultiPaperVelocity {
 
     private int port;
     private boolean balanceNodes;
+
+    private final Random random = new Random();
 
     @Inject
     public MultiPaperVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataFolder) {
@@ -58,6 +64,38 @@ public class MultiPaperVelocity {
 
         server.getAllServers().forEach(s -> {
             server.unregisterServer(s.getServerInfo());
+        });
+
+//        server.getScheduler().buildTask(this, () -> {
+//            server.getAllPlayers().forEach(player -> {
+//                server.getAllServers().stream().filter(registeredServer ->
+//                    !registeredServer.getServerInfo().equals(player.getCurrentServer().get().getServerInfo())
+//                ).findAny().ifPresent(registeredServer -> {
+//                    transferPlayer(player, registeredServer, 5);
+//                });
+//            });
+//        }).repeat(10, TimeUnit.SECONDS).schedule();
+
+        new DrainServer(logger, 8080, serverName -> {
+            RegisteredServer s = server.getServer(serverName).orElse(null);
+            if (s == null)
+                return false;
+
+            logger.info("Draining server {}", s);
+
+            return s.getPlayersConnected().stream()
+                    .map(player -> {
+                        List<RegisteredServer> servers = server.getAllServers().stream()
+                                .filter(s2 -> !s2.equals(s))
+                                .filter(s2 -> !s2.equals(player.getCurrentServer()
+                                        .map(s3 -> s3.getServer()).orElse(null)))
+                                .toList();
+                        if (servers.isEmpty()) return false;
+                        transferPlayer(player, servers.get(random.nextInt(servers.size())), 5);
+                        return true;
+                    })
+                    .reduce(Boolean::logicalAnd)
+                    .orElse(false);
         });
 
         ServerConnection.addListener(new ServerConnection.Listener() {
