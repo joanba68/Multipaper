@@ -1,5 +1,6 @@
 package puregero.multipaper.server.velocity;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.event.Subscribe;
@@ -24,12 +25,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Plugin(id = "multipaper-velocity",
     name = "MultiPaper Velocity",
@@ -44,13 +41,16 @@ public class MultiPaperVelocity {
     private int port;
     private boolean balanceNodes;
 
-    private final Random random = new Random();
+    private DrainStrategy drainStrategy;
+    private final ScalingManager scalingManager;
 
     @Inject
     public MultiPaperVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataFolder) {
         this.server = server;
         this.logger = logger;
         this.dataFolder = dataFolder;
+
+        this.scalingManager = new ScalingManager(logger);
     }
 
     @Subscribe
@@ -66,37 +66,12 @@ public class MultiPaperVelocity {
             server.unregisterServer(s.getServerInfo());
         });
 
-//        server.getScheduler().buildTask(this, () -> {
-//            server.getAllPlayers().forEach(player -> {
-//                server.getAllServers().stream().filter(registeredServer ->
-//                    !registeredServer.getServerInfo().equals(player.getCurrentServer().get().getServerInfo())
-//                ).findAny().ifPresent(registeredServer -> {
-//                    transferPlayer(player, registeredServer, 5);
-//                });
-//            });
-//        }).repeat(10, TimeUnit.SECONDS).schedule();
+//       server.getScheduler().buildTask(this, () -> {
+//            scalingManager.deletePod(server.getAllServers().stream().findAny().get().getServerInfo().getName());
+//       }).repeat(10, TimeUnit.SECONDS).schedule();
 
-        new DrainServer(logger, 8080, serverName -> {
-            RegisteredServer s = server.getServer(serverName).orElse(null);
-            if (s == null)
-                return false;
-
-            logger.info("Draining server {}", s);
-
-            return s.getPlayersConnected().stream()
-                    .map(player -> {
-                        List<RegisteredServer> servers = server.getAllServers().stream()
-                                .filter(s2 -> !s2.equals(s))
-                                .filter(s2 -> !s2.equals(player.getCurrentServer()
-                                        .map(s3 -> s3.getServer()).orElse(null)))
-                                .toList();
-                        if (servers.isEmpty()) return false;
-                        transferPlayer(player, servers.get(random.nextInt(servers.size())), 5);
-                        return true;
-                    })
-                    .reduce(Boolean::logicalAnd)
-                    .orElse(false);
-        });
+        setDrainStrategy(DrainStrategy.defaultDrainStrategy);
+        new DrainServer(logger, 8080, this::executeDrainStrategy);
 
         ServerConnection.addListener(new ServerConnection.Listener() {
             @Override
@@ -117,7 +92,7 @@ public class MultiPaperVelocity {
         });
     }
 
-    private void transferPlayer(Player player, RegisteredServer to, int maxRetries) {
+    public void transferPlayer(Player player, RegisteredServer to, int maxRetries) {
         logger.info("Transferring player {} from server {} to server {}",
                 player.getUsername(),
                 player.getCurrentServer().map(s -> s.getServerInfo().getName()).orElse("null"),
@@ -164,11 +139,13 @@ public class MultiPaperVelocity {
                 retryDelay * 2
         );
 
-        this.server.getScheduler().buildTask(this, () -> {
-            player.createConnectionRequest(server).connect().whenComplete((r, t) -> {
-                handleTransfer(player, server, r, t, retries - 1, retryDelay * 2);
-            });
-        }).delay(retryDelay * 2, TimeUnit.SECONDS).schedule();
+        this.server.getScheduler()
+                .buildTask(this, () -> player
+                        .createConnectionRequest(server)
+                        .connect()
+                        .whenComplete((r, t) -> handleTransfer(player, server, r, t, retries - 1, retryDelay * 2)))
+                .delay(retryDelay * 2, TimeUnit.SECONDS)
+                .schedule();
     }
 
     private void disconnect(Player player) {
@@ -248,5 +225,22 @@ public class MultiPaperVelocity {
         }
 
         return new Toml().read(file);
+    }
+
+    public ProxyServer getProxy() {
+        return server;
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public void setDrainStrategy(DrainStrategy drainStrategy) {
+        this.drainStrategy = drainStrategy;
+    }
+
+    public boolean executeDrainStrategy(String serverName) {
+        Preconditions.checkNotNull(this.drainStrategy, "Drain strategy is not set");
+        return this.drainStrategy.drain(serverName, this);
     }
 }

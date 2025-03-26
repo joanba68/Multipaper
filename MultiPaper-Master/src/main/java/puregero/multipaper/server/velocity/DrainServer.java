@@ -12,7 +12,6 @@ public class DrainServer {
     private final int port;
     private HttpServer server;
     private final Logger logger;
-
     private final DrainListener listener;
 
     public interface DrainListener {
