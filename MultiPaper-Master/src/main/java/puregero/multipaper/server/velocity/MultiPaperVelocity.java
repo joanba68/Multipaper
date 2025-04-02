@@ -232,6 +232,10 @@ public class MultiPaperVelocity {
         this.serverSelectionStrategy = serverSelectionStrategy;
     }
 
+    public ServerSelectionStrategy getServerSelectionStrategy() {
+        return serverSelectionStrategy;
+    }
+
     public boolean executeDrainStrategy(String serverName) {
         Preconditions.checkNotNull(this.drainStrategy, "Drain strategy is not set");
         return this.drainStrategy.drain(serverName, this);
