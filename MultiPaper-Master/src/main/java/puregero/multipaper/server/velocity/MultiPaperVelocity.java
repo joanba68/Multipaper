@@ -41,7 +41,8 @@ public class MultiPaperVelocity {
     private int port;
     private boolean balanceNodes;
 
-    private DrainStrategy drainStrategy;
+    private DrainStrategy drainStrategy = DrainStrategy.defaultDrainStrategy;
+    private ServerSelectionStrategy serverSelectionStrategy = ServerSelectionStrategy.lowestTickTime;
     private final ScalingManager scalingManager;
 
     @Inject
@@ -70,7 +71,6 @@ public class MultiPaperVelocity {
 //            scalingManager.deletePod(server.getAllServers().stream().findAny().get().getServerInfo().getName());
 //       }).repeat(10, TimeUnit.SECONDS).schedule();
 
-        setDrainStrategy(DrainStrategy.defaultDrainStrategy);
         new DrainServer(logger, 8080, this::executeDrainStrategy);
 
         ServerConnection.addListener(new ServerConnection.Listener() {
@@ -179,18 +179,7 @@ public class MultiPaperVelocity {
         if (this.balanceNodes && isMultiPaperServer(targetServer.getServerInfo().getName())) {
             Collection<RegisteredServer> servers = this.server.getAllServers();
 
-            long lowestTickTime = Long.MAX_VALUE;
-
-            for (RegisteredServer server : servers) {
-                String serverName = server.getServerInfo().getName();
-                ServerConnection connection = ServerConnection.getConnection(serverName);
-
-                if (connection != null && ServerConnection.isAlive(serverName)
-                        && connection.getTimer().averageInMillis() < lowestTickTime) {
-                    lowestTickTime = connection.getTimer().averageInMillis();
-                    bestServer = server;
-                }
-            }
+            bestServer = serverSelectionStrategy.selectServer(servers, event.getPlayer());
 
             if (bestServer != null) {
                 event.setResult(ServerPreConnectEvent.ServerResult.allowed(bestServer));
@@ -237,6 +226,10 @@ public class MultiPaperVelocity {
 
     public void setDrainStrategy(DrainStrategy drainStrategy) {
         this.drainStrategy = drainStrategy;
+    }
+
+    public void setServerSelectionStrategy(ServerSelectionStrategy serverSelectionStrategy) {
+        this.serverSelectionStrategy = serverSelectionStrategy;
     }
 
     public boolean executeDrainStrategy(String serverName) {

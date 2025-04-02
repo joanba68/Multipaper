@@ -135,10 +135,6 @@ public class ScalingManager {
     }
 
     public boolean deletePod(String podName) {
-        logger.info("DeleteRequest {}", ScaleRequest.of(1));
-        logger.info("DeleteRequest json {}", jsonConverter.toJson(ScaleRequest.of(1)));
-        logger.info("ScaleRequest {}", DeleteRequest.of(podName));
-        logger.info("ScaleRequest json {}", jsonConverter.toJson(DeleteRequest.of(podName)));
         try {
             return handleResponse(post(deleteEndpoint, DeleteRequest.of(podName)));
         } catch (IOException e) {
