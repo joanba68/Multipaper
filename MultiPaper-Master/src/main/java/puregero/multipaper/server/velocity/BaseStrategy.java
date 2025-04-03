@@ -1,17 +1,16 @@
-package puregero.multipaper.server.velocity.scaling.strategy;
+package puregero.multipaper.server.velocity;
 
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import puregero.multipaper.server.velocity.MultiPaperVelocity;
 
 import java.util.concurrent.TimeUnit;
 
-public class Base implements ScalingStrategy {
+public class BaseStrategy implements Strategy {
     protected MultiPaperVelocity plugin;
     protected long interval;
     protected TimeUnit timeUnit;
 
-    public Base(Long interval, TimeUnit timeUnit) {
+    public BaseStrategy(Long interval, TimeUnit timeUnit) {
         this.interval = interval;
         this.timeUnit = timeUnit;
     }
@@ -19,7 +18,7 @@ public class Base implements ScalingStrategy {
     @Override
     public void onStartup(MultiPaperVelocity plugin) {
         this.plugin = plugin;
-        plugin.getProxy().getScheduler().buildTask(plugin, this::performScaling)
+        plugin.getProxy().getScheduler().buildTask(plugin, this::executeStrategy)
                 .repeat(interval, timeUnit)
                 .schedule();
     }
@@ -41,6 +40,6 @@ public class Base implements ScalingStrategy {
     }
 
     @Override
-    public void performScaling() {
+    public void executeStrategy() {
     }
 }

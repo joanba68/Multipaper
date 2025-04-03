@@ -1,4 +1,4 @@
-package puregero.multipaper.server.velocity.scaling.strategy;
+package puregero.multipaper.server.velocity.migration.strategy;
 
 import puregero.multipaper.server.velocity.BaseStrategy;
 

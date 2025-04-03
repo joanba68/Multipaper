@@ -23,7 +23,6 @@ import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.drain.DrainServer;
 import puregero.multipaper.server.velocity.drain.strategy.DrainStrategy;
 import puregero.multipaper.server.velocity.scaling.ScalingManager;
-import puregero.multipaper.server.velocity.scaling.strategy.ScalingStrategy;
 import puregero.multipaper.server.velocity.serverselection.strategy.ServerSelectionStrategy;
 
 import java.io.File;
@@ -53,7 +52,9 @@ public class MultiPaperVelocity {
     private DrainStrategy drainStrategy;
     private ServerSelectionStrategy serverSelectionStrategy;
 
-    private ScalingStrategy scalingStrategy;
+    private Strategy scalingStrategy;
+    private Strategy migrationStrategy;
+
     private final ScalingManager scalingManager;
 
     @Inject
@@ -95,23 +96,38 @@ public class MultiPaperVelocity {
         scalingStrategy = loadStrategy(
                 "scaling.strategy.",
                 config.getString("scaling.strategy", "none"),
-                ScalingStrategy.class,
+                Strategy.class,
                 config.getLong("scaling.interval", 60L),
                 TimeUnit.SECONDS
         );
 
+        migrationStrategy = loadStrategy(
+                "migration.strategy.",
+                config.getString("migration.strategy", "none"),
+                Strategy.class,
+                config.getLong("migration.interval", 60L),
+                TimeUnit.SECONDS
+        );
+
         scalingStrategy.onStartup(this);
+        migrationStrategy.onStartup(this);
 
         server.getEventManager().register(
                 this,
                 ServerConnectedEvent.class,
-                e -> scalingStrategy.onPlayerConnect(e.getPlayer())
+                e -> {
+                    scalingStrategy.onPlayerConnect(e.getPlayer());
+                    migrationStrategy.onPlayerConnect(e.getPlayer());
+                }
         );
 
         server.getEventManager().register(
                 this,
                 DisconnectEvent.class,
-                e -> scalingStrategy.onPlayerDisconnect(e.getPlayer())
+                e -> {
+                    scalingStrategy.onPlayerDisconnect(e.getPlayer());
+                    migrationStrategy.onPlayerDisconnect(e.getPlayer());
+                }
         );
 
         ServerConnection.addListener(new ServerConnection.Listener() {
@@ -122,6 +138,7 @@ public class MultiPaperVelocity {
                 );
                 logger.info("Registered server {}", connection.name());
                 scalingStrategy.onServerRegister(s);
+                migrationStrategy.onServerRegister(s);
             }
 
             @Override
@@ -132,6 +149,7 @@ public class MultiPaperVelocity {
                 );
                 logger.info("Unregistered server {}", connection.name());
                 scalingStrategy.onServerUnregister(s);
+                migrationStrategy.onServerUnregister(s);
             }
         });
     }
@@ -304,7 +322,7 @@ public class MultiPaperVelocity {
         return serverSelectionStrategy;
     }
 
-    public void setScalingStrategy(ScalingStrategy scalingStrategy) {
+    public void setScalingStrategy(Strategy scalingStrategy) {
         this.scalingStrategy = scalingStrategy;
     }
 

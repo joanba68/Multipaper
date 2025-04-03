@@ -2,12 +2,13 @@ package puregero.multipaper.server.velocity.scaling.strategy;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import puregero.multipaper.server.ServerConnection;
+import puregero.multipaper.server.velocity.BaseStrategy;
 
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
-public class TickLength extends Base {
+public class TickLength extends BaseStrategy {
     public static final int MSPT_HIGH = 40;
     public static final int MSPT_LOW = 10;
 
@@ -16,7 +17,7 @@ public class TickLength extends Base {
     }
 
     @Override
-    public void performScaling() {
+    public void executeStrategy() {
         Collection<RegisteredServer> allServers = plugin
                 .getProxy()
                 .getAllServers();

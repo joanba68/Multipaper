@@ -1,10 +1,9 @@
-package puregero.multipaper.server.velocity.scaling.strategy;
+package puregero.multipaper.server.velocity;
 
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import puregero.multipaper.server.velocity.MultiPaperVelocity;
 
-public interface ScalingStrategy {
+public interface Strategy {
     void onStartup(MultiPaperVelocity plugin);
 
     void onPlayerConnect(Player player);
@@ -15,5 +14,5 @@ public interface ScalingStrategy {
 
     void onServerUnregister(RegisteredServer server);
 
-    void performScaling();
+    void executeStrategy();
 }
