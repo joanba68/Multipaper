@@ -43,6 +43,8 @@ public class MultiPaperVelocity {
 
     private DrainStrategy drainStrategy = DrainStrategy.defaultDrainStrategy;
     private ServerSelectionStrategy serverSelectionStrategy = ServerSelectionStrategy.lowestTickTime;
+
+    private ScalingStrategy scalingStrategy;
     private final ScalingManager scalingManager;
 
     @Inject
@@ -63,9 +65,7 @@ public class MultiPaperVelocity {
 
         new MultiPaperServer(this.port);
 
-        server.getAllServers().forEach(s -> {
-            server.unregisterServer(s.getServerInfo());
-        });
+        server.getAllServers().forEach(s -> server.unregisterServer(s.getServerInfo()));
 
 //       server.getScheduler().buildTask(this, () -> {
 //            scalingManager.deletePod(server.getAllServers().stream().findAny().get().getServerInfo().getName());
@@ -234,6 +234,14 @@ public class MultiPaperVelocity {
 
     public ServerSelectionStrategy getServerSelectionStrategy() {
         return serverSelectionStrategy;
+    }
+
+    public void setScalingStrategy(ScalingStrategy scalingStrategy) {
+        this.scalingStrategy = scalingStrategy;
+    }
+
+    public ScalingManager getScalingManager() {
+        return scalingManager;
     }
 
     public boolean executeDrainStrategy(String serverName) {
