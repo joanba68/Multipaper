@@ -154,10 +154,10 @@ public class MultiPaperVelocity {
 
     @SuppressWarnings("unchecked")
     private <T> T loadStrategy(String packagePrefix, String strategyName, Class<T> strategyClass, Object... constructorArgs) {
-        if (strategyName == null || strategyName.isEmpty())
+        if (strategyName.isEmpty())
             logger.warn("Strategy name for {} is not set, using default strategy", strategyClass.getSimpleName());
 
-        CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, strategyName);
+        strategyName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, strategyName);
         try {
             Class<?> clazz = Class.forName(getClass().getPackageName() + "." + packagePrefix + strategyName);
             if (strategyClass.isAssignableFrom(clazz)) {
