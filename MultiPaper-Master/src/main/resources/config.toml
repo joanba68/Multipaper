@@ -1,2 +1,16 @@
+[master]
 port = 35353
-balance-nodes = true
+
+[server-selection]
+enabled = true
+strategy = "lowest_tick_time"
+
+[drain-server]
+enabled = true
+port = 8080
+strategy = "default"
+
+[scaling]
+enabled = true
+strategy = "none" # none means no scaling
+scaling-interval = 60

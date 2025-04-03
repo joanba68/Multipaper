@@ -1,4 +1,4 @@
-package puregero.multipaper.server.velocity.scaling;
+package puregero.multipaper.server.velocity.scaling.strategy;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import puregero.multipaper.server.ServerConnection;
@@ -7,11 +7,11 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
-public class TickLengthScalingStrategy extends BaseScalingStrategy {
+public class TickLength extends Base {
     public static final int MSPT_HIGH = 40;
     public static final int MSPT_LOW = 10;
 
-    public TickLengthScalingStrategy(long interval, TimeUnit timeUnit) {
+    public TickLength(long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
     }
 

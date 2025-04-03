@@ -1,4 +1,4 @@
-package puregero.multipaper.server.velocity;
+package puregero.multipaper.server.velocity.serverselection.strategy;
 
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -6,10 +6,10 @@ import puregero.multipaper.server.ServerConnection;
 
 import java.util.Collection;
 
-public interface ServerSelectionStrategy {
-    RegisteredServer selectServer(Collection<RegisteredServer> servers, Player player);
+public class LowestTickTime implements ServerSelectionStrategy {
 
-    ServerSelectionStrategy lowestTickTime = (servers, player) -> {
+    @Override
+    public RegisteredServer selectServer(Collection<RegisteredServer> servers, Player player) {
         RegisteredServer bestServer = null;
         long lowestTickTime = Long.MAX_VALUE;
 
@@ -25,5 +25,5 @@ public interface ServerSelectionStrategy {
         }
 
         return bestServer;
-    };
+    }
 }

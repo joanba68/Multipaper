@@ -1,4 +1,4 @@
-package puregero.multipaper.server.velocity;
+package puregero.multipaper.server.velocity.scaling;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;

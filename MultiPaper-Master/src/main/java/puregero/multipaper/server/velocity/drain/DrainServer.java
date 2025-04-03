@@ -1,4 +1,4 @@
-package puregero.multipaper.server.velocity;
+package puregero.multipaper.server.velocity.drain;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -9,6 +9,8 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
 public class DrainServer {
+    public static final int DEFAULT_PORT = 8080;
+
     private final int port;
     private HttpServer server;
     private final Logger logger;
