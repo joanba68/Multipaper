@@ -76,7 +76,7 @@ public class MultiPaperVelocity {
         server.getAllServers().forEach(s -> server.unregisterServer(s.getServerInfo()));
 
         this.balanceNodes = config.getBoolean("server-selection.enabled", true);
-        if (!this.balanceNodes)
+        if (this.balanceNodes)
             serverSelectionStrategy = loadStrategy(
                     "serverselection.strategy.",
                     config.getString("server-selection.strategy", "lowest_tick_time"),
@@ -154,11 +154,10 @@ public class MultiPaperVelocity {
         strategyName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, strategyName);
         try {
             Class<?> clazz = Class.forName(getClass().getPackageName() + "." + packagePrefix + strategyName);
-            if (strategyClass.isAssignableFrom(clazz)) {
+            if (strategyClass.isAssignableFrom(clazz))
                 return (T) clazz.getConstructor(getConstructorParameterTypes(constructorArgs)).newInstance(constructorArgs);
-            } else {
+            else
                 logger.warn("Invalid strategy: {}", strategyName);
-            }
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
                  IllegalAccessException | InvocationTargetException e) {
             logger.warn("Failed to load strategy: {}", strategyName, e);
