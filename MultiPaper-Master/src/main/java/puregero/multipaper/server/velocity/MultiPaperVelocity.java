@@ -83,8 +83,6 @@ public class MultiPaperVelocity {
                     ServerSelectionStrategy.class
             );
 
-        assert serverSelectionStrategy != null;
-
         boolean drainServerEnabled = config.getBoolean("drain-server.enabled", false);
         int drainServerPort = Math.toIntExact(config.getLong("drain-server.port", (long) DrainServer.DEFAULT_PORT));
         if (drainServerEnabled)
@@ -96,8 +94,6 @@ public class MultiPaperVelocity {
                 DrainStrategy.class
         );
 
-        assert drainStrategy != null;
-
         // select the scaling strategy
         boolean scalingEnabled = config.getBoolean("scaling.enabled", false);
         if (scalingEnabled)
@@ -108,8 +104,6 @@ public class MultiPaperVelocity {
                     config.getLong("scaling.interval", 10L),
                     TimeUnit.SECONDS
             );
-
-        assert scalingStrategy != null;
 
         scalingStrategy.onStartup(this);
 
