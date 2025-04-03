@@ -3,17 +3,28 @@ package puregero.multipaper.server.velocity.scaling.strategy;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
+import puregero.multipaper.server.velocity.MultiPaperVelocity;
 
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
 public class TickLength extends BaseStrategy {
-    public static final int MSPT_HIGH = 40;
-    public static final int MSPT_LOW = 10;
+    private static final int DEFAULT_MSPT_HIGH = 40;
+    private static final int DEFAULT_MSPT_LOW = 10;
+
+    private int msptHigh;
+    private int msptLow;
 
     public TickLength(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
+    }
+
+    @Override
+    public void onStartup(MultiPaperVelocity plugin) {
+        super.onStartup(plugin);
+        this.msptHigh = Math.toIntExact(config.getLong("scaling.tick_length.high", (long) DEFAULT_MSPT_HIGH));
+        this.msptLow = Math.toIntExact(config.getLong("scaling.tick_length.low", (long) DEFAULT_MSPT_LOW));
     }
 
     @Override
@@ -28,7 +39,7 @@ public class TickLength extends BaseStrategy {
                 .map(server -> ServerConnection
                         .getConnection(server.getServerInfo().getName())
                         .getTimer()
-                        .averageInMillis() > MSPT_HIGH)
+                        .averageInMillis() > msptHigh)
                 .reduce(Boolean::logicalAnd)
                 .orElse(false);
         if (scaleUp)
@@ -40,7 +51,7 @@ public class TickLength extends BaseStrategy {
                 .map(server -> ServerConnection
                         .getConnection(server.getServerInfo().getName())
                         .getTimer()
-                        .averageInMillis() < MSPT_LOW)
+                        .averageInMillis() < msptLow)
                 .reduce(Boolean::logicalAnd)
                 .orElse(false);
 

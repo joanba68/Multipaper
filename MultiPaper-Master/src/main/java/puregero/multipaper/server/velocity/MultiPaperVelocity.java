@@ -57,6 +57,8 @@ public class MultiPaperVelocity {
 
     private final ScalingManager scalingManager;
 
+    private Toml config;
+
     @Inject
     public MultiPaperVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataFolder) {
         this.server = server;
@@ -68,7 +70,7 @@ public class MultiPaperVelocity {
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
-        Toml config = this.getConfig();
+        config = this.readConfig();
 
         this.port = Math.toIntExact(config.getLong("master.port", (long) MultiPaperServer.DEFAULT_PORT));
         new MultiPaperServer(this.port);
@@ -282,7 +284,7 @@ public class MultiPaperVelocity {
         return ServerConnection.getConnection(name) != null;
     }
 
-    private Toml getConfig() {
+    private Toml readConfig() {
         File dataFolder = this.dataFolder.toFile();
         if (!dataFolder.exists()) {
             dataFolder.mkdir();
@@ -300,6 +302,10 @@ public class MultiPaperVelocity {
         }
 
         return new Toml().read(file);
+    }
+
+    public Toml getConfig() {
+        return config;
     }
 
     public ProxyServer getProxy() {
