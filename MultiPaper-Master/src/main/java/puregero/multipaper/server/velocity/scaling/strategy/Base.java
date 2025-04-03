@@ -11,7 +11,7 @@ public class Base implements ScalingStrategy {
     protected long interval;
     protected TimeUnit timeUnit;
 
-    public Base(long interval, TimeUnit timeUnit) {
+    public Base(Long interval, TimeUnit timeUnit) {
         this.interval = interval;
         this.timeUnit = timeUnit;
     }

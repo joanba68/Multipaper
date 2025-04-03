@@ -11,7 +11,7 @@ public class TickLength extends Base {
     public static final int MSPT_HIGH = 40;
     public static final int MSPT_LOW = 10;
 
-    public TickLength(long interval, TimeUnit timeUnit) {
+    public TickLength(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
     }
 
