@@ -11,6 +11,5 @@ port = 8080
 strategy = "default"
 
 [scaling]
-enabled = true
 strategy = "none" # none means no scaling
 scaling-interval = 60

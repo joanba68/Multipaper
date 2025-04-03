@@ -70,20 +70,18 @@ public class MultiPaperVelocity {
         Toml config = this.getConfig();
 
         this.port = Math.toIntExact(config.getLong("master.port", (long) MultiPaperServer.DEFAULT_PORT));
-
         new MultiPaperServer(this.port);
 
         server.getAllServers().forEach(s -> server.unregisterServer(s.getServerInfo()));
 
         this.balanceNodes = config.getBoolean("server-selection.enabled", true);
-        if (this.balanceNodes)
-            serverSelectionStrategy = loadStrategy(
-                    "serverselection.strategy.",
-                    config.getString("server-selection.strategy", "lowest_tick_time"),
-                    ServerSelectionStrategy.class
-            );
+        serverSelectionStrategy = loadStrategy(
+                "serverselection.strategy.",
+                config.getString("server-selection.strategy", "lowest_tick_time"),
+                ServerSelectionStrategy.class
+        );
 
-        boolean drainServerEnabled = config.getBoolean("drain-server.enabled", false);
+        boolean drainServerEnabled = config.getBoolean("drain-server.enabled", true);
         int drainServerPort = Math.toIntExact(config.getLong("drain-server.port", (long) DrainServer.DEFAULT_PORT));
         if (drainServerEnabled)
             new DrainServer(logger, drainServerPort, this::executeDrainStrategy);
@@ -94,16 +92,13 @@ public class MultiPaperVelocity {
                 DrainStrategy.class
         );
 
-        // select the scaling strategy
-        boolean scalingEnabled = config.getBoolean("scaling.enabled", false);
-        if (scalingEnabled)
-            scalingStrategy = loadStrategy(
-                    "scaling.strategy.",
-                    config.getString("scaling.strategy", "none"),
-                    ScalingStrategy.class,
-                    config.getLong("scaling.interval", 10L),
-                    TimeUnit.SECONDS
-            );
+        scalingStrategy = loadStrategy(
+                "scaling.strategy.",
+                config.getString("scaling.strategy", "none"),
+                ScalingStrategy.class,
+                config.getLong("scaling.interval", 60L),
+                TimeUnit.SECONDS
+        );
 
         scalingStrategy.onStartup(this);
 
@@ -118,11 +113,6 @@ public class MultiPaperVelocity {
                 DisconnectEvent.class,
                 e -> scalingStrategy.onPlayerDisconnect(e.getPlayer())
         );
-
-//       server.getScheduler().buildTask(this, () -> {
-//            scalingManager.deletePod(server.getAllServers().stream().findAny().get().getServerInfo().getName());
-//       }).repeat(10, TimeUnit.SECONDS).schedule();
-
 
         ServerConnection.addListener(new ServerConnection.Listener() {
             @Override
@@ -147,7 +137,8 @@ public class MultiPaperVelocity {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T loadStrategy(String packagePrefix, String strategyName, Class<T> strategyClass, Object... constructorArgs) {
+    private <T> T loadStrategy(String packagePrefix, String strategyName, Class<T> strategyClass,
+                               Object... constructorArgs) {
         if (strategyName.isEmpty())
             logger.warn("Strategy name for {} is not set, using default strategy", strategyClass.getSimpleName());
 
@@ -155,7 +146,8 @@ public class MultiPaperVelocity {
         try {
             Class<?> clazz = Class.forName(getClass().getPackageName() + "." + packagePrefix + strategyName);
             if (strategyClass.isAssignableFrom(clazz))
-                return (T) clazz.getConstructor(getConstructorParameterTypes(constructorArgs)).newInstance(constructorArgs);
+                return (T) clazz.getConstructor(getConstructorParameterTypes(constructorArgs))
+                        .newInstance(constructorArgs);
             else
                 logger.warn("Invalid strategy: {}", strategyName);
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
@@ -176,9 +168,10 @@ public class MultiPaperVelocity {
                 to.getServerInfo().getName()
         );
         disconnect(player);
-        player.createConnectionRequest(to).connect().whenComplete((result, throwable) -> {
-            handleTransfer(player, to, result, throwable, maxRetries, 1);
-        });
+        player.createConnectionRequest(to)
+                .connect()
+                .whenComplete((result, throwable) ->
+                        handleTransfer(player, to, result, throwable, maxRetries, 1));
     }
 
     private void handleTransfer(Player player, RegisteredServer server, ConnectionRequestBuilder.Result result,
@@ -217,10 +210,11 @@ public class MultiPaperVelocity {
         );
 
         this.server.getScheduler()
-                .buildTask(this, () -> player
-                        .createConnectionRequest(server)
+                .buildTask(this, () ->
+                        player.createConnectionRequest(server)
                         .connect()
-                        .whenComplete((r, t) -> handleTransfer(player, server, r, t, retries - 1, retryDelay * 2)))
+                        .whenComplete((r, t) ->
+                                handleTransfer(player, server, r, t, retries - 1, retryDelay * 2)))
                 .delay(retryDelay * 2, TimeUnit.SECONDS)
                 .schedule();
     }
@@ -255,12 +249,9 @@ public class MultiPaperVelocity {
 
         if (this.balanceNodes && isMultiPaperServer(targetServer.getServerInfo().getName())) {
             Collection<RegisteredServer> servers = this.server.getAllServers();
-
             bestServer = serverSelectionStrategy.selectServer(servers, event.getPlayer());
-
-            if (bestServer != null) {
+            if (bestServer != null)
                 event.setResult(ServerPreConnectEvent.ServerResult.allowed(bestServer));
-            }
         }
 
         logger.info("Found best server. Best server: {}, player: {}",
