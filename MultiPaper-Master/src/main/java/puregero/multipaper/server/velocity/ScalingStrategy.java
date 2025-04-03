@@ -6,8 +6,6 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 public interface ScalingStrategy {
     void onStartup(MultiPaperVelocity plugin);
 
-    void onShutdown();
-
     void onPlayerConnect(Player player);
 
     void onPlayerDisconnect(Player player);

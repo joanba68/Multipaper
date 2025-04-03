@@ -4,7 +4,9 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
@@ -17,6 +19,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import org.slf4j.Logger;
 import puregero.multipaper.server.MultiPaperServer;
 import puregero.multipaper.server.ServerConnection;
+import puregero.multipaper.server.velocity.scaling.BaseScalingStrategy;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,6 +70,19 @@ public class MultiPaperVelocity {
 
         server.getAllServers().forEach(s -> server.unregisterServer(s.getServerInfo()));
 
+        if (scalingStrategy != null)
+            scalingStrategy.onStartup(this);
+
+        server.getEventManager().register(this, ServerConnectedEvent.class, e -> {
+            if (scalingStrategy != null)
+                scalingStrategy.onPlayerConnect(e.getPlayer());
+        });
+
+        server.getEventManager().register(this, DisconnectEvent.class, e -> {
+            if (scalingStrategy != null)
+                scalingStrategy.onPlayerDisconnect(e.getPlayer());
+        });
+
 //       server.getScheduler().buildTask(this, () -> {
 //            scalingManager.deletePod(server.getAllServers().stream().findAny().get().getServerInfo().getName());
 //       }).repeat(10, TimeUnit.SECONDS).schedule();
@@ -76,18 +92,23 @@ public class MultiPaperVelocity {
         ServerConnection.addListener(new ServerConnection.Listener() {
             @Override
             public void onConnect(ServerConnection.ServerConnectionInfo connection) {
-                server.registerServer(
+                RegisteredServer s = server.registerServer(
                         new ServerInfo(connection.name(), new InetSocketAddress(connection.host(), connection.port()))
                 );
                 logger.info("Registered server {}", connection.name());
+                if (scalingStrategy != null)
+                    scalingStrategy.onServerRegister(s);
             }
 
             @Override
             public void onDisconnect(ServerConnection.ServerConnectionInfo connection) {
+                RegisteredServer s = server.getServer(connection.name()).orElse(null);
                 server.unregisterServer(
                         new ServerInfo(connection.name(), new InetSocketAddress(connection.host(), connection.port()))
                 );
                 logger.info("Unregistered server {}", connection.name());
+                if (scalingStrategy != null)
+                    scalingStrategy.onServerUnregister(s);
             }
         });
     }
