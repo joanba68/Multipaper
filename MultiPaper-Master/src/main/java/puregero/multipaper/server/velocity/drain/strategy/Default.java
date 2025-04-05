@@ -15,7 +15,7 @@ public class Default implements DrainStrategy {
         return s.getPlayersConnected().stream()
                 .map(player -> {
                     // delegate to the server selection strategy
-                    RegisteredServer to = plugin.getServerSelectionStrategy().selectServer(plugin.getProxy().getAllServers(), player);
+                    RegisteredServer to = plugin.getServerSelectionStrategy().selectServer(player, plugin);
                     if (to == null) return false;
                     plugin.transferPlayer(player, to, 5);
                     return true;

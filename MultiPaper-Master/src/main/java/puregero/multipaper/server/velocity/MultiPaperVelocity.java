@@ -1,6 +1,5 @@
 package puregero.multipaper.server.velocity;
 
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.moandjiezana.toml.Toml;
@@ -32,8 +31,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 @Plugin(id = "multipaper-velocity",
@@ -52,9 +49,7 @@ public class MultiPaperVelocity {
     private DrainStrategy drainStrategy;
     private ServerSelectionStrategy serverSelectionStrategy;
 
-    private Strategy scalingStrategy;
-    private Strategy migrationStrategy;
-
+    private final StrategyManager strategyManager;
     private final ScalingManager scalingManager;
 
     private Toml config;
@@ -66,6 +61,7 @@ public class MultiPaperVelocity {
         this.dataFolder = dataFolder;
 
         this.scalingManager = new ScalingManager(logger);
+        this.strategyManager = new StrategyManager(logger);
     }
 
     @Subscribe
@@ -78,7 +74,7 @@ public class MultiPaperVelocity {
         server.getAllServers().forEach(s -> server.unregisterServer(s.getServerInfo()));
 
         this.balanceNodes = config.getBoolean("server-selection.enabled", true);
-        serverSelectionStrategy = loadStrategy(
+        serverSelectionStrategy = strategyManager.loadStrategy(
                 "serverselection.strategy.",
                 config.getString("server-selection.strategy", "lowest_tick_time"),
                 ServerSelectionStrategy.class
@@ -89,13 +85,13 @@ public class MultiPaperVelocity {
         if (drainServerEnabled)
             new DrainServer(logger, drainServerPort, this::executeDrainStrategy);
 
-        drainStrategy = loadStrategy(
+        drainStrategy = strategyManager.loadStrategy(
                 "drain.strategy.",
                 config.getString("drain-server.strategy", "default"),
                 DrainStrategy.class
         );
 
-        scalingStrategy = loadStrategy(
+        Strategy scalingStrategy = strategyManager.loadStrategy(
                 "scaling.strategy.",
                 config.getString("scaling.strategy", "none"),
                 Strategy.class,
@@ -103,7 +99,7 @@ public class MultiPaperVelocity {
                 TimeUnit.SECONDS
         );
 
-        migrationStrategy = loadStrategy(
+        Strategy migrationStrategy = strategyManager.loadStrategy(
                 "migration.strategy.",
                 config.getString("migration.strategy", "none"),
                 Strategy.class,
@@ -111,25 +107,20 @@ public class MultiPaperVelocity {
                 TimeUnit.SECONDS
         );
 
-        scalingStrategy.onStartup(this);
-        migrationStrategy.onStartup(this);
+        strategyManager.addStrategy(scalingStrategy, migrationStrategy);
+
+        strategyManager.onStartup(this);
 
         server.getEventManager().register(
                 this,
                 ServerConnectedEvent.class,
-                e -> {
-                    scalingStrategy.onPlayerConnect(e.getPlayer());
-                    migrationStrategy.onPlayerConnect(e.getPlayer());
-                }
+                e -> strategyManager.onPlayerConnect(e.getPlayer())
         );
 
         server.getEventManager().register(
                 this,
                 DisconnectEvent.class,
-                e -> {
-                    scalingStrategy.onPlayerDisconnect(e.getPlayer());
-                    migrationStrategy.onPlayerDisconnect(e.getPlayer());
-                }
+                e -> strategyManager.onPlayerDisconnect(e.getPlayer())
         );
 
         ServerConnection.addListener(new ServerConnection.Listener() {
@@ -139,8 +130,7 @@ public class MultiPaperVelocity {
                         new ServerInfo(connection.name(), new InetSocketAddress(connection.host(), connection.port()))
                 );
                 logger.info("Registered server {}", connection.name());
-                scalingStrategy.onServerRegister(s);
-                migrationStrategy.onServerRegister(s);
+                strategyManager.onServerRegister(s);
             }
 
             @Override
@@ -150,35 +140,9 @@ public class MultiPaperVelocity {
                         new ServerInfo(connection.name(), new InetSocketAddress(connection.host(), connection.port()))
                 );
                 logger.info("Unregistered server {}", connection.name());
-                scalingStrategy.onServerUnregister(s);
-                migrationStrategy.onServerUnregister(s);
+                strategyManager.onServerUnregister(s);
             }
         });
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> T loadStrategy(String packagePrefix, String strategyName, Class<T> strategyClass,
-                               Object... constructorArgs) {
-        if (strategyName.isEmpty())
-            logger.warn("Strategy name for {} is not set, using default strategy", strategyClass.getSimpleName());
-
-        strategyName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, strategyName);
-        try {
-            Class<?> clazz = Class.forName(getClass().getPackageName() + "." + packagePrefix + strategyName);
-            if (strategyClass.isAssignableFrom(clazz))
-                return (T) clazz.getConstructor(getConstructorParameterTypes(constructorArgs))
-                        .newInstance(constructorArgs);
-            else
-                logger.warn("Invalid strategy: {}", strategyName);
-        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
-                 IllegalAccessException | InvocationTargetException e) {
-            logger.warn("Failed to load strategy: {}", strategyName, e);
-        }
-        return null;
-    }
-
-    private Class<?>[] getConstructorParameterTypes(Object... args) {
-        return Arrays.stream(args).map(Object::getClass).toArray(Class<?>[]::new);
     }
 
     public void transferPlayer(Player player, RegisteredServer to, int maxRetries) {
@@ -268,8 +232,7 @@ public class MultiPaperVelocity {
         RegisteredServer bestServer = null;
 
         if (this.balanceNodes && isMultiPaperServer(targetServer.getServerInfo().getName())) {
-            Collection<RegisteredServer> servers = this.server.getAllServers();
-            bestServer = serverSelectionStrategy.selectServer(servers, event.getPlayer());
+            bestServer = serverSelectionStrategy.selectServer(event.getPlayer(), this);
             if (bestServer != null)
                 event.setResult(ServerPreConnectEvent.ServerResult.allowed(bestServer));
         }
@@ -316,20 +279,8 @@ public class MultiPaperVelocity {
         return logger;
     }
 
-    public void setDrainStrategy(DrainStrategy drainStrategy) {
-        this.drainStrategy = drainStrategy;
-    }
-
-    public void setServerSelectionStrategy(ServerSelectionStrategy serverSelectionStrategy) {
-        this.serverSelectionStrategy = serverSelectionStrategy;
-    }
-
     public ServerSelectionStrategy getServerSelectionStrategy() {
         return serverSelectionStrategy;
-    }
-
-    public void setScalingStrategy(Strategy scalingStrategy) {
-        this.scalingStrategy = scalingStrategy;
     }
 
     public ScalingManager getScalingManager() {
