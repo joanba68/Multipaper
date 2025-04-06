@@ -5,7 +5,15 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.MultiPaperVelocity;
 
+import com.moandjiezana.toml.Toml;
+
 public class LowestTickTime implements ServerSelectionStrategy {
+
+    protected Toml config;
+    
+    public LowestTickTime(Toml config) {
+        this.config = config;
+    }
 
     @Override
     public RegisteredServer selectServer(Player player, MultiPaperVelocity plugin) {
