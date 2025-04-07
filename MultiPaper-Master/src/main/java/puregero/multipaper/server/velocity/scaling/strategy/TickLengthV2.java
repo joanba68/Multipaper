@@ -9,7 +9,6 @@ import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
 import puregero.multipaper.server.velocity.MultiPaperVelocity;
 
-
 public class TickLengthV2 extends BaseStrategy {
     private static final int DEFAULT_MSPT_HIGH = 40;
     private static final int DEFAULT_MSPT_LOW = 10;
@@ -53,7 +52,7 @@ public class TickLengthV2 extends BaseStrategy {
             scaleUp = counter >= scaleUpRatio * (double) allServers.size();
         else {
             logger.info("Waiting for servers before starting scaling strategy !");
-            scaleUp = false;
+            return;
         }
 
         logger.info("Servers with degraded tick time: {}, required {} servers for scale up", counter, (int) Math.round(scaleUpRatio * (double) allServers.size()));
@@ -61,6 +60,12 @@ public class TickLengthV2 extends BaseStrategy {
         
         //if (scaleUp)
             //plugin.getScalingManager().scaleUp();
+
+        // don't scale down if there is only one server
+        if(allServers.size() <= 1) {
+            logger.info("There are no servers to scale down !");
+            return;
+        }
 
         // if all servers are below the threshold, scale down
         boolean scaleDown = allServers
