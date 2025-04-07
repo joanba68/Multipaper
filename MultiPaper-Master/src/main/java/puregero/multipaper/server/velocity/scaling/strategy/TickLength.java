@@ -45,6 +45,10 @@ public class TickLength extends BaseStrategy {
         if (scaleUp)
             plugin.getScalingManager().scaleUp();
 
+        // don't scale down if there is only one server
+        if(allServers.size() <= 1)
+            return;
+
         // if all servers are below the threshold, scale down
         boolean scaleDown = allServers
                 .stream()
