@@ -45,6 +45,7 @@ jobs:
             build/libs/multipaper.jar
             build/libs/multipaper-master.jar
           generate_release_notes: true
+          tag: "latest"
           name: Build ${{ github.run_number }}
           fail_on_unmatched_files: true
           draft: true
