@@ -132,7 +132,7 @@ allprojects {
         repositories {
             maven {
                 name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/bystepii/MultiPaper")
+                url = uri("https://maven.pkg.github.com/joanba68/MultiPaper")
                 credentials {
                     username = System.getenv("GITHUB_ACTOR")
                     password = System.getenv("GITHUB_TOKEN")
