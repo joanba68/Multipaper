@@ -9,24 +9,15 @@ import puregero.multipaper.server.velocity.MultiPaperVelocity;
 
 public class WeightedTickPlayers implements ServerSelectionStrategy {
 
-    protected Toml config;
-    protected double timeW;
-    protected double playerW;
+    @Override
+    public RegisteredServer selectServer(Player player, MultiPaperVelocity plugin) {
+        
+        RegisteredServer bestServer = null;
+        double bestQuality = (double) Long.MAX_VALUE;
+        double timeW;
+        double playerW;
 
-    public WeightedTickPlayers() {
-        this.config = null;
-
-        timeW   = 1.0;
-        playerW = 1.0;
-    }
-
-    public WeightedTickPlayers(Toml config) {
-        this.config = config;
-
-        loadConfig();
-    }
-
-    protected void loadConfig(){
+        Toml config = plugin.getConfig();
 
         try {
             timeW   = config.getDouble("server-selection.timeW");
@@ -35,14 +26,6 @@ public class WeightedTickPlayers implements ServerSelectionStrategy {
             timeW   = 5.0;
             playerW = 1.0;
         }
-
-    }
-
-    @Override
-    public RegisteredServer selectServer(Player player, MultiPaperVelocity plugin) {
-        
-        RegisteredServer bestServer = null;
-        double bestQuality = (double) Long.MAX_VALUE;
 
         plugin.getLogger().info("Weights configured: {} * time + {} * players", timeW, playerW);
 

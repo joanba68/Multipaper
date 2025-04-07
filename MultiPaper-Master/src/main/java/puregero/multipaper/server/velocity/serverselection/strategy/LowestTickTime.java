@@ -9,12 +9,6 @@ import com.moandjiezana.toml.Toml;
 
 public class LowestTickTime implements ServerSelectionStrategy {
 
-    protected Toml config;
-    
-    public LowestTickTime(Toml config) {
-        this.config = config;
-    }
-
     @Override
     public RegisteredServer selectServer(Player player, MultiPaperVelocity plugin) {
         RegisteredServer bestServer = null;

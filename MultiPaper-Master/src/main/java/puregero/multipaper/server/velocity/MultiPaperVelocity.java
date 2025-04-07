@@ -77,8 +77,7 @@ public class MultiPaperVelocity {
         serverSelectionStrategy = strategyManager.loadStrategy(
                 "serverselection.strategy.",
                 config.getString("server-selection.strategy", "lowest_tick_time"),
-                ServerSelectionStrategy.class,
-                config
+                ServerSelectionStrategy.class
         );
 
         boolean drainServerEnabled = config.getBoolean("drain-server.enabled", true);
