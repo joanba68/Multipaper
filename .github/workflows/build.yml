@@ -2,7 +2,7 @@ name: Generate Jars
 on:
   workflow_dispatch:
     tags:
-      - 'v*'
+      - '*'
 jobs:
   paperclip:
     runs-on: ubuntu-latest
