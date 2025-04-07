@@ -20,6 +20,10 @@ strategy = "tick_length_v2"
 scaleUpRatio = 0.3
 scaling-interval = 30
 
+[scaling.tick_length]
+low = 11
+high = 41
+
 [migration]
 strategy = "none" # none means no migration
 migration-interval = 60

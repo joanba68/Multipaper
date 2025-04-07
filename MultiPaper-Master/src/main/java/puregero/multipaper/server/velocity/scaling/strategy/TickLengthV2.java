@@ -47,7 +47,14 @@ public class TickLengthV2 extends BaseStrategy {
                             .averageInMillis() >= msptHigh)
                         .count();
 
-        boolean scaleUp = counter >= scaleUpRatio * (double) allServers.size();
+        boolean scaleUp = false;
+        // at startup time there are no registered servers...
+        if (allServers.size() > 0) 
+            scaleUp = counter >= scaleUpRatio * (double) allServers.size();
+        else {
+            logger.info("Waiting for servers before starting scaling strategy !");
+            scaleUp = false;
+        }
 
         logger.info("Servers with degraded tick time: {}, required {} servers for scale up", counter, (int) Math.round(scaleUpRatio * (double) allServers.size()));
         logger.info("Scale up servers needed: {}", scaleUp);
