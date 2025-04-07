@@ -10,6 +10,10 @@ public class Default implements DrainStrategy {
         if (s == null)
             return false;
 
+        // don't drain if there is only one server
+        if (plugin.getProxy().getAllServers().size() <= 1)
+            return false;
+
         plugin.getLogger().info("Draining server {}", s);
 
         return s.getPlayersConnected().stream()
