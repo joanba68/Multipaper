@@ -24,6 +24,7 @@ public class ServerConnection extends MasterBoundMessageHandler {
     public final HashSet<UUID> playerUUIDs = new HashSet<>();
     private final List<Player> players = new ArrayList<>();
     private double tps;
+    private long ownedChunks = 0;
     private int port = -1;
     private String host;
     private UUID uuid;
@@ -219,6 +220,14 @@ public class ServerConnection extends MasterBoundMessageHandler {
         }
 
         this.tps = tps;
+    }
+
+    public long getOwnedChunks() {
+        return ownedChunks;
+    }
+
+    public void setOwnedChunks(long ownedChunks) {
+        this.ownedChunks = ownedChunks;
     }
 
     public SocketAddress getAddress() {
