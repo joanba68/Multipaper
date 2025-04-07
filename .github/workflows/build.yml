@@ -1,6 +1,6 @@
 name: Generate Jars
 on:
-  push:
+  workflow_dispatch:
     tags:
       - 'v*'
 jobs:
