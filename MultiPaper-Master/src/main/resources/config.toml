@@ -14,8 +14,11 @@ port = 8080
 strategy = "default"
 
 [scaling]
-strategy = "none" # none means no scaling
-scaling-interval = 60
+enabled = true
+#strategy = "none" # none means no scaling
+strategy = "tick_length_v2"
+scaleUpRatio = 0.3
+scaling-interval = 30
 
 [migration]
 strategy = "none" # none means no migration
