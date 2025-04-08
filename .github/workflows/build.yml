@@ -43,12 +43,12 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         id: release
-        tag_name: latest
         with:
           files: |
             build/libs/multipaper.jar
             build/libs/multipaper-master.jar
           generate_release_notes: true
+          tag_name: latest
           name: Build ${{ github.run_number }}
           fail_on_unmatched_files: true
           draft: true
