@@ -1,8 +1,11 @@
 name: Generate Jars
 on:
   workflow_dispatch:
-    tags:
-      - '*'
+  push:
+    branches:
+      - main
+  release:
+      types: [published]
 jobs:
   paperclip:
     runs-on: ubuntu-latest
