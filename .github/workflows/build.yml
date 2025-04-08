@@ -43,6 +43,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         id: release
+        tag_name: latest
         with:
           files: |
             build/libs/multipaper.jar
