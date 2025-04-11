@@ -136,10 +136,6 @@ public class MultiPaperVelocity {
             @Override
             public void onDisconnect(ServerConnection.ServerConnectionInfo connection) {
                 RegisteredServer s = server.getServer(connection.name()).orElse(null);
-                server.unregisterServer(
-                        new ServerInfo(connection.name(), new InetSocketAddress(connection.host(), connection.port()))
-                );
-                logger.info("Unregistered server {}", connection.name());
                 strategyManager.onServerUnregister(s);
             }
         });
@@ -289,6 +285,15 @@ public class MultiPaperVelocity {
 
     public boolean executeDrainStrategy(String serverName) {
         Preconditions.checkNotNull(this.drainStrategy, "Drain strategy is not set");
-        return this.drainStrategy.drain(serverName, this);
+
+        RegisteredServer s = server.getServer(serverName).orElse(null);
+        if (s != null) {
+            server.unregisterServer(s.getServerInfo());
+            logger.info("Unregistered server {}", serverName);
+            return this.drainStrategy.drain(serverName, this);
+        } else {
+            logger.warn("Server {} is not registered", serverName);
+            return false;
+        }
     }
 }
