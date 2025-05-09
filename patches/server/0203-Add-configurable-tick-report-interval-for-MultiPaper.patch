@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Stepan Klymonchuk <stepanstepan0000@gmail.com>
+Date: Fri, 9 May 2025 15:29:00 +0000
+Subject: [PATCH] Add configurable tick report interval for MultiPaper
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index c103f6e8d17b9a52af80c11978ef05f2cea382e5..a616f0eccb19b462403048f4f625d13b61e70292 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -198,6 +198,7 @@ import puregero.multipaper.MultiPaper;
+ import puregero.multipaper.MultiPaperDirtyCraftPersistentDataContainer;
+ import puregero.multipaper.MultiPaperExternalBlocksHandler;
+ import puregero.multipaper.MultiPaperFileSyncer;
++import puregero.multipaper.config.MultiPaperConfiguration;
+ import puregero.multipaper.externalserverprotocol.DifficultyUpdatePacket;
+ 
+ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements CommandSource, AutoCloseable {
+@@ -1526,7 +1527,8 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         tickTimes10s.add(this.tickCount, j);
+         tickTimes60s.add(this.tickCount, j);
+         // Paper end
+-        MultiPaper.sendTickTime(k - i, recentTps[0]); // MultiPaper
++        if (this.tickCount % MultiPaperConfiguration.get().masterConnection.tickReportInterval == 0)
++            MultiPaper.sendTickTime(tickTimes5s.getAverage(), recentTps[0]); // MultiPaper
+         this.frameTimer.logFrameDuration(k - i);
+         //this.profiler.pop(); // Purpur
+         org.spigotmc.WatchdogThread.tick(); // Spigot
+diff --git a/src/main/java/puregero/multipaper/MultiPaper.java b/src/main/java/puregero/multipaper/MultiPaper.java
+index f2313905a67c978cfed22ba3d347707f57df8db4..3aaba3d7f6fa73c2f399dcc2584a6e3d11bbd31e 100644
+--- a/src/main/java/puregero/multipaper/MultiPaper.java
++++ b/src/main/java/puregero/multipaper/MultiPaper.java
+@@ -1,6 +1,7 @@
+ package puregero.multipaper;
+ 
+ import io.papermc.paper.chunk.system.scheduling.NewChunkHolder;
++import io.papermc.paper.plugin.provider.source.SparkProviderSource;
+ import io.papermc.paper.world.ChunkEntitySlices;
+ import net.minecraft.core.registries.BuiltInRegistries;
+ import net.minecraft.server.level.ServerPlayer;
+@@ -168,7 +169,7 @@ public class MultiPaper {
+         MultiPaperPermissionSyncer.sync();
+     }
+ 
+-    public static void sendTickTime(long time, double tps) {
++    public static void sendTickTime(double time, double tps) {
+         long ownedChunks = Bukkit.getWorlds().stream()
+                 .map(world ->
+                         Arrays.stream(world.getLoadedChunks())
+diff --git a/src/main/java/puregero/multipaper/config/MultiPaperConfiguration.java b/src/main/java/puregero/multipaper/config/MultiPaperConfiguration.java
+index d9ae084270c4259371e84246dbc68841ace99d18..ef29debc57907c8f31286eb7a52cd04d4db36358 100644
+--- a/src/main/java/puregero/multipaper/config/MultiPaperConfiguration.java
++++ b/src/main/java/puregero/multipaper/config/MultiPaperConfiguration.java
+@@ -28,6 +28,7 @@ public class MultiPaperConfiguration extends ConfigurationPart {
+     public MasterConnection masterConnection;
+ 
+     public class MasterConnection extends ConfigurationPart  {
++        public int tickReportInterval = 20;
+         public boolean advertiseToBuiltInProxy = true;
+ 
+         // One day we'll get comments in yaml files
