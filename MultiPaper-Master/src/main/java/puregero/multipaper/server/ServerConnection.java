@@ -20,7 +20,7 @@ public class ServerConnection extends MasterBoundMessageHandler {
 
     private String name;
     private long lastPing = System.currentTimeMillis();
-    private final CircularTimer timer = new CircularTimer();
+    private CircularTimer timer = new CircularTimer();
     public final HashSet<UUID> playerUUIDs = new HashSet<>();
     private final List<Player> players = new ArrayList<>();
     private double tps;
@@ -186,6 +186,10 @@ public class ServerConnection extends MasterBoundMessageHandler {
 
     public CircularTimer getTimer() {
         return timer;
+    }
+
+    public void setTimer(CircularTimer timer) {
+        this.timer = timer;
     }
 
     public boolean hasPlayer(UUID uuid) {

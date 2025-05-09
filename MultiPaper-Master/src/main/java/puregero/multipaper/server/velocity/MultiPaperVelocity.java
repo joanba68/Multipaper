@@ -17,6 +17,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import org.slf4j.Logger;
+import puregero.multipaper.server.CircularTimer;
 import puregero.multipaper.server.MultiPaperServer;
 import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.drain.DrainServer;
@@ -67,6 +68,11 @@ public class MultiPaperVelocity {
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
         config = this.readConfig();
+
+        // this must be set before any CircularTimer is created
+        CircularTimer.setSize(
+                Math.toIntExact(config.getLong("master.timer-size", (long) CircularTimer.DEFAULT_SIZE))
+        );
 
         this.port = Math.toIntExact(config.getLong("master.port", (long) MultiPaperServer.DEFAULT_PORT));
         new MultiPaperServer(this.port);

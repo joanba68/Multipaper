@@ -84,7 +84,7 @@ public class MultiPaperBungee extends Plugin implements Listener {
 
             // Send them to the multipaper server with the lowest tick time
             ServerInfo bestServer = null;
-            long lowestTickTime = Long.MAX_VALUE;
+            double lowestTickTime = Double.MAX_VALUE;
 
             for (ServerInfo info : servers) {
                 ServerConnection connection = ServerConnection.getConnection(info.getName());

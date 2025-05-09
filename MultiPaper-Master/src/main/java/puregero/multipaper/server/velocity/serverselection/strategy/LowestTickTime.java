@@ -10,7 +10,7 @@ public class LowestTickTime implements ServerSelectionStrategy {
     @Override
     public RegisteredServer selectServer(Player player, MultiPaperVelocity plugin) {
         RegisteredServer bestServer = null;
-        long lowestTickTime = Long.MAX_VALUE;
+        double lowestTickTime = Double.MAX_VALUE;
 
         for (RegisteredServer server : plugin.getProxy().getAllServers()) {
             String serverName = server.getServerInfo().getName();
