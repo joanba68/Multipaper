@@ -16,6 +16,8 @@ public class TickLength extends BaseStrategy {
     private int msptHigh;
     private int msptLow;
 
+    private boolean disableScaling = false;
+
     public TickLength(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
     }
@@ -28,7 +30,28 @@ public class TickLength extends BaseStrategy {
     }
 
     @Override
+    public void onServerRegister(RegisteredServer server) {
+        if (disableScaling) {
+            logger.info("New server registered, enabling scaling again");
+            disableScaling = false;
+        }
+    }
+
+    @Override
+    public void onServerUnregister(RegisteredServer server) {
+        if (disableScaling) {
+            logger.info("Server unregistered, enabling scaling again");
+            disableScaling = false;
+        }
+    }
+
+    @Override
     public void executeStrategy() {
+        if (disableScaling) {
+            logger.info("Scaling is disabled");
+            return;
+        }
+
         Collection<RegisteredServer> allServers = plugin
                 .getProxy()
                 .getAllServers();
@@ -46,8 +69,15 @@ public class TickLength extends BaseStrategy {
                 })
                 .reduce(Boolean::logicalAnd)
                 .orElse(false);
-        if (scaleUp)
+
+        if (scaleUp) {
+            logger.info("Scaling up, all servers are above the threshold");
             plugin.getScalingManager().scaleUp();
+            // disable scaling until the new server is up
+            disableScaling = true;
+            // do not scale down if we are scaling up
+            return;
+        }
 
         // don't scale down if there is only one server
         if(allServers.size() <= 1) {
@@ -74,6 +104,8 @@ public class TickLength extends BaseStrategy {
                     .ifPresent(server -> {
                         plugin.getScalingManager().deletePod(server.getServerInfo().getName());
                     });
+            // disable scaling until the server is deleted
+            disableScaling = true;
         }
     }
 }
