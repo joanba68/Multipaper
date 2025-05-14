@@ -292,14 +292,21 @@ public class MultiPaperVelocity {
     public boolean executeDrainStrategy(String serverName) {
         Preconditions.checkNotNull(this.drainStrategy, "Drain strategy is not set");
 
-        RegisteredServer s = server.getServer(serverName).orElse(null);
-        if (s != null) {
-            server.unregisterServer(s.getServerInfo());
-            logger.info("Unregistered server {}", serverName);
-            return this.drainStrategy.drain(serverName, this);
-        } else {
+        RegisteredServer srv = server.getServer(serverName).orElse(null);
+
+        if (srv == null) {
             logger.warn("Server {} is not registered", serverName);
             return false;
         }
+
+        // do not drain if this is the last server
+        if (server.getAllServers().size() <= 1) {
+            logger.warn("Cannot drain server {} because it is the last server", serverName);
+            return false;
+        }
+
+        server.unregisterServer(srv.getServerInfo());
+        logger.info("Unregistered server {}", serverName);
+        return this.drainStrategy.drain(srv, this);
     }
 }

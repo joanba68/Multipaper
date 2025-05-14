@@ -5,18 +5,11 @@ import puregero.multipaper.server.velocity.MultiPaperVelocity;
 
 public class Default implements DrainStrategy {
     @Override
-    public boolean drain(String serverName, MultiPaperVelocity plugin) {
-        RegisteredServer s = plugin.getProxy().getServer(serverName).orElse(null);
-        if (s == null)
-            return false;
+    public boolean drain(RegisteredServer server, MultiPaperVelocity plugin) {
+        plugin.getLogger().info("Draining server {}", server.getServerInfo().getName());
 
-        // don't drain if there is only one server
-        if (plugin.getProxy().getAllServers().size() <= 1)
-            return false;
-
-        plugin.getLogger().info("Draining server {}", s);
-
-        return s.getPlayersConnected().stream()
+        return server.getPlayersConnected()
+                .stream()
                 .map(player -> {
                     // delegate to the server selection strategy
                     RegisteredServer to = plugin.getServerSelectionStrategy().selectServer(player, plugin);
