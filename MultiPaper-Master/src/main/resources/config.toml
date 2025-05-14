@@ -13,8 +13,8 @@ strategy = "default"
 
 [scaling]
 strategy = "none" # none means no scaling
-scaling-interval = 60
+interval = 60
 
 [migration]
 strategy = "none" # none means no migration
-migration-interval = 60
+interval = 60
