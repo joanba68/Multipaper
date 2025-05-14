@@ -69,9 +69,12 @@ public class StrategyManager {
         strategyName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, strategyName);
         try {
             Class<?> clazz = Class.forName(getClass().getPackageName() + "." + packagePrefix + strategyName);
-            if (strategyClass.isAssignableFrom(clazz))
-                return (T) clazz.getConstructor(getConstructorParameterTypes(constructorArgs))
+            if (strategyClass.isAssignableFrom(clazz)) {
+                T strategy = (T) clazz.getConstructor(getConstructorParameterTypes(constructorArgs))
                         .newInstance(constructorArgs);
+                logger.info("Loaded {} strategy: {}", packagePrefix.split("\\.")[0], strategyName);
+                return strategy;
+            }
             else
                 logger.warn("Invalid strategy: {}", strategyName);
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |

@@ -36,18 +36,24 @@ public class TickLength extends BaseStrategy {
         // if all servers are above the threshold, scale up
         boolean scaleUp = allServers
                 .stream()
-                .map(server -> ServerConnection
-                        .getConnection(server.getServerInfo().getName())
-                        .getTimer()
-                        .averageInMillis() > msptHigh)
+                .map(server -> {
+                    double mspt = ServerConnection
+                            .getConnection(server.getServerInfo().getName())
+                            .getTimer()
+                            .averageInMillis();
+                    logger.info("Server {} mspt: {}", server.getServerInfo().getName(), mspt);
+                    return mspt > msptHigh;
+                })
                 .reduce(Boolean::logicalAnd)
                 .orElse(false);
         if (scaleUp)
             plugin.getScalingManager().scaleUp();
 
         // don't scale down if there is only one server
-        if(allServers.size() <= 1)
+        if(allServers.size() <= 1) {
+            logger.info("Not scaling down, only one server available");
             return;
+        }
 
         // if all servers are below the threshold, scale down
         boolean scaleDown = allServers
@@ -61,6 +67,7 @@ public class TickLength extends BaseStrategy {
 
         // delete the server with the lowest amount of players
         if (scaleDown) {
+            logger.info("Scaling down, all servers are below the threshold");
             allServers
                     .stream()
                     .min(Comparator.comparingInt(s -> s.getPlayersConnected().size()))
