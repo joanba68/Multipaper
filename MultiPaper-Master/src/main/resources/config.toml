@@ -5,6 +5,10 @@ port = 35353
 [server-selection]
 enabled = true
 strategy = "lowest_tick_time"
+#strategy = "lowest_tick_time"
+strategy = "weighted_tick_players"
+timeW = 5.0
+playerW = 1.0
 
 [drain-server]
 enabled = true
@@ -12,9 +16,16 @@ port = 8080
 strategy = "default"
 
 [scaling]
-strategy = "none" # none means no scaling
-interval = 60
+enabled = true
+#strategy = "none" # none means no scaling
+strategy = "tick_length_v2"
+scaleUpRatio = 0.3
+scaling-interval = 30
+
+[scaling.tick_length]
+low = 11
+high = 41
 
 [migration]
 strategy = "none" # none means no migration
-interval = 60
+migration-interval = 60
