@@ -1,11 +1,10 @@
-# Testing tags
 name: Generate Jars
 on:
   push:
     tags:
       - 'v*'
 jobs:
-  paperclip:
+  bundler:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Git Repository
@@ -20,13 +19,13 @@ jobs:
         run: git config --global user.email "actions@github.com" && git config --global user.name "Github Actions"
       - name: Apply Patches
         run: ./gradlew applyPatches --stacktrace
-      - name: Build Paperclip jar
-        run: ./gradlew shadowjar createReobfPaperclipJar --stacktrace
-      - name: Upload Paperclip jar
+      - name: Build Bundler jar
+        run: ./gradlew shadowjar createReobfBundlerJar --stacktrace
+      - name: Upload Bundler jar
         uses: actions/upload-artifact@v4
         with:
           name: multipaper.jar
-          path: build/libs/multipaper-paperclip-*-reobf.jar
+          path: build/libs/multipaper-bundler-*-reobf.jar
       - name: Upload MultiPaper-Master jar
         uses: actions/upload-artifact@v4
         with:
@@ -37,7 +36,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Rename artifact
-        run: mv build/libs/multipaper-paperclip-*-reobf.jar build/libs/multipaper.jar && mv MultiPaper-Master/build/libs/multipaper-master*.jar build/libs/multipaper-master.jar
+        run: mv build/libs/multipaper-bundler-*-reobf.jar build/libs/multipaper.jar && mv MultiPaper-Master/build/libs/multipaper-master*.jar build/libs/multipaper-master.jar
       - name: Create Release
         uses: softprops/action-gh-release@v2
         id: release
