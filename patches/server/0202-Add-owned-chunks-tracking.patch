@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Stepan Klymonchuk <stepanstepan0000@gmail.com>
+Date: Mon, 7 Apr 2025 12:07:14 +0000
+Subject: [PATCH] Add owned chunks tracking
+
+
+diff --git a/src/main/java/puregero/multipaper/MultiPaper.java b/src/main/java/puregero/multipaper/MultiPaper.java
+index 622180fd64e732d3e1359813f7da69e40f91b0f4..f2313905a67c978cfed22ba3d347707f57df8db4 100644
+--- a/src/main/java/puregero/multipaper/MultiPaper.java
++++ b/src/main/java/puregero/multipaper/MultiPaper.java
+@@ -58,6 +58,7 @@ import java.util.concurrent.CompletableFuture;
+ import java.util.concurrent.TimeUnit;
+ import java.util.concurrent.TimeoutException;
+ import java.util.function.Consumer;
++import java.util.function.Predicate;
+ import java.util.function.Supplier;
+ import java.util.zip.DeflaterOutputStream;
+ import java.util.zip.InflaterInputStream;
+@@ -168,7 +169,14 @@ public class MultiPaper {
+     }
+ 
+     public static void sendTickTime(long time, double tps) {
+-        getConnection().send(new WriteTickTimeMessage(time, (float) tps));
++        long ownedChunks = Bukkit.getWorlds().stream()
++                .map(world ->
++                        Arrays.stream(world.getLoadedChunks())
++                                .filter(Chunk::isLocalChunk)
++                                .filter(Predicate.not(Chunk::isExternalChunk))
++                                .count())
++                .reduce(0L, Long::sum);
++        getConnection().send(new WriteTickTimeMessage(time, (float) tps, ownedChunks));
+     }
+ 
+     public static CompletableFuture<Boolean> sendPlayerConnect(ServerPlayer player) {
