@@ -1,8 +1,10 @@
 [master]
+timer-size = 60
 port = 35353
 
 [server-selection]
 enabled = true
+strategy = "lowest_tick_time"
 #strategy = "lowest_tick_time"
 strategy = "weighted_tick_players"
 timeW = 5.0

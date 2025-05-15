@@ -14,5 +14,7 @@ public interface Strategy {
 
     void onServerUnregister(RegisteredServer server);
 
+    void onShutdown();
+
     void executeStrategy();
 }

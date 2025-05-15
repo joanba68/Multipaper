@@ -158,7 +158,7 @@ public class ProxyServer extends Thread {
     }
 
     private SocketAddress getSuitableServer() {
-        long highestTickTime = 0;
+        double highestTickTime = 0;
 
         for (ServerConnection connection : ServerConnection.getConnections()) {
             if (connection != null && connection.isOnline() && connection.getPort() > 0 && connection.getTimer().averageInMillis() > highestTickTime) {

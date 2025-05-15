@@ -20,10 +20,11 @@ public class ServerConnection extends MasterBoundMessageHandler {
 
     private String name;
     private long lastPing = System.currentTimeMillis();
-    private final CircularTimer timer = new CircularTimer();
+    private CircularTimer timer = new CircularTimer();
     public final HashSet<UUID> playerUUIDs = new HashSet<>();
     private final List<Player> players = new ArrayList<>();
     private double tps;
+    private long ownedChunks = 0;
     private int port = -1;
     private String host;
     private UUID uuid;
@@ -187,6 +188,10 @@ public class ServerConnection extends MasterBoundMessageHandler {
         return timer;
     }
 
+    public void setTimer(CircularTimer timer) {
+        this.timer = timer;
+    }
+
     public boolean hasPlayer(UUID uuid) {
         synchronized (playerUUIDs) {
             return playerUUIDs.contains(uuid);
@@ -219,6 +224,14 @@ public class ServerConnection extends MasterBoundMessageHandler {
         }
 
         this.tps = tps;
+    }
+
+    public long getOwnedChunks() {
+        return ownedChunks;
+    }
+
+    public void setOwnedChunks(long ownedChunks) {
+        this.ownedChunks = ownedChunks;
     }
 
     public SocketAddress getAddress() {

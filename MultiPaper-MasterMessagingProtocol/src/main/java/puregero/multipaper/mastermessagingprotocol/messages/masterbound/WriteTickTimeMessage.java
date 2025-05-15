@@ -2,25 +2,29 @@ package puregero.multipaper.mastermessagingprotocol.messages.masterbound;
 
 import puregero.multipaper.mastermessagingprotocol.ExtendedByteBuf;
 
-public class WriteTickTimeMessage extends MasterBoundMessage {
+    public class WriteTickTimeMessage extends MasterBoundMessage {
 
-    public final long tickTime;
+    public final double tickTime;
     public final float tps;
+    public final long ownedChunks;
 
-    public WriteTickTimeMessage(long tickTime, float tps) {
+    public WriteTickTimeMessage(double tickTime, float tps, long ownedChunks) {
         this.tickTime = tickTime;
         this.tps = tps;
+        this.ownedChunks = ownedChunks;
     }
 
     public WriteTickTimeMessage(ExtendedByteBuf byteBuf) {
-        tickTime = byteBuf.readLong();
+        tickTime = byteBuf.readDouble();
         tps = byteBuf.readFloat();
+        ownedChunks = byteBuf.readLong();
     }
 
     @Override
     public void write(ExtendedByteBuf byteBuf) {
-        byteBuf.writeLong(tickTime);
+        byteBuf.writeDouble(tickTime);
         byteBuf.writeFloat(tps);
+        byteBuf.writeLong(ownedChunks);
     }
 
     @Override

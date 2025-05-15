@@ -23,8 +23,8 @@ dependencies {
     implementation("io.netty:netty-all:4.1.87.Final")
     implementation("se.llbit:jo-nbt:1.3.0")
     compileOnly("net.md-5:bungeecord-api:1.16-R0.4")
-    compileOnly("com.velocitypowered:velocity-api:3.0.1")
-    annotationProcessor("com.velocitypowered:velocity-api:3.0.1")
+    compileOnly("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
+    annotationProcessor("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
 }
 
 tasks.jar {

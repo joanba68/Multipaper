@@ -49,7 +49,7 @@ public class DrainServer {
                     if (success) {
                         sendResponse(exchange, 200, "OK");
                     } else {
-                        sendResponse(exchange, 404, "Not Found");
+                        sendResponse(exchange, 500, "Internal Server Error: Drain failed");
                     }
                 } catch (Exception e) {
                     sendResponse(exchange, 500, "Internal Server Error");

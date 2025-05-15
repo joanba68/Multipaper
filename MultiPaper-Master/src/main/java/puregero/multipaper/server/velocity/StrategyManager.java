@@ -6,56 +6,51 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import org.slf4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class StrategyManager {
     private final Logger logger;
-    private final ArrayList<Strategy> strategies = new ArrayList<>();
+    private final Map<String, Strategy> strategies = new HashMap<>();
 
     public StrategyManager(Logger logger) {
         this.logger = logger;
     }
 
-    public void addStrategy(Strategy strategy) {
-        strategies.add(strategy);
+    public void addStrategy(String name, Strategy strategy) {
+        strategies.put(name, strategy);
     }
 
-    public void addStrategy(Strategy... strategies) {
-        this.strategies.addAll(List.of(strategies));
-    }
-
-    public void removeStrategy(Strategy strategy) {
-        strategies.remove(strategy);
+    public void removeStrategy(String name) {
+        strategies.get(name).onShutdown();
+        strategies.remove(name);
     }
 
     public void onStartup(MultiPaperVelocity plugin) {
-        strategies.forEach(strategy -> {
+        strategies.values().forEach(strategy -> {
             strategy.onStartup(plugin);
         });
     }
 
     public void onPlayerConnect(Player player) {
-        strategies.forEach(strategy -> {
+        strategies.values().forEach(strategy -> {
             strategy.onPlayerConnect(player);
         });
     }
 
     public void onPlayerDisconnect(Player player) {
-        strategies.forEach(strategy -> {
+        strategies.values().forEach(strategy -> {
             strategy.onPlayerDisconnect(player);
         });
     }
 
     public void onServerRegister(RegisteredServer server) {
-        strategies.forEach(strategy -> {
+        strategies.values().forEach(strategy -> {
             strategy.onServerRegister(server);
         });
     }
 
     public void onServerUnregister(RegisteredServer server) {
-        strategies.forEach(strategy -> {
+        strategies.values().forEach(strategy -> {
             strategy.onServerUnregister(server);
         });
     }
@@ -69,9 +64,12 @@ public class StrategyManager {
         strategyName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, strategyName);
         try {
             Class<?> clazz = Class.forName(getClass().getPackageName() + "." + packagePrefix + strategyName);
-            if (strategyClass.isAssignableFrom(clazz))
-                return (T) clazz.getConstructor(getConstructorParameterTypes(constructorArgs))
+            if (strategyClass.isAssignableFrom(clazz)) {
+                T strategy = (T) clazz.getConstructor(getConstructorParameterTypes(constructorArgs))
                         .newInstance(constructorArgs);
+                logger.info("Loaded {} strategy: {}", packagePrefix.split("\\.")[0], strategyName);
+                return strategy;
+            }
             else
                 logger.warn("Invalid strategy: {}", strategyName);
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |

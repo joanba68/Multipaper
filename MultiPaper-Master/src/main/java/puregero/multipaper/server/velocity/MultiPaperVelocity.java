@@ -3,6 +3,8 @@ package puregero.multipaper.server.velocity;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.moandjiezana.toml.Toml;
+import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
@@ -17,6 +19,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import org.slf4j.Logger;
+import puregero.multipaper.server.CircularTimer;
 import puregero.multipaper.server.MultiPaperServer;
 import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.drain.DrainServer;
@@ -54,6 +57,9 @@ public class MultiPaperVelocity {
 
     private Toml config;
 
+    private final static int DEFAULT_SCALING_INTERVAL = 60;
+    private final static int DEFAULT_MIGRATION_INTERVAL = 60;
+
     @Inject
     public MultiPaperVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataFolder) {
         this.server = server;
@@ -66,7 +72,21 @@ public class MultiPaperVelocity {
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
+
+        CommandManager commandManager = server.getCommandManager();
+        commandManager.register(
+                commandManager.metaBuilder("strategy")
+                        .plugin(this)
+                        .build(),
+                StrategyCommand.create(this)
+        );
+
         config = this.readConfig();
+
+        // this must be set before any CircularTimer is created
+        CircularTimer.setSize(
+                Math.toIntExact(config.getLong("master.timer-size", (long) CircularTimer.DEFAULT_SIZE))
+        );
 
         this.port = Math.toIntExact(config.getLong("master.port", (long) MultiPaperServer.DEFAULT_PORT));
         new MultiPaperServer(this.port);
@@ -95,7 +115,7 @@ public class MultiPaperVelocity {
                 "scaling.strategy.",
                 config.getString("scaling.strategy", "none"),
                 Strategy.class,
-                config.getLong("scaling.interval", 60L),
+                config.getLong("scaling.interval", (long) DEFAULT_SCALING_INTERVAL),
                 TimeUnit.SECONDS
         );
 
@@ -103,11 +123,12 @@ public class MultiPaperVelocity {
                 "migration.strategy.",
                 config.getString("migration.strategy", "none"),
                 Strategy.class,
-                config.getLong("migration.interval", 60L),
+                config.getLong("migration.interval", (long) DEFAULT_MIGRATION_INTERVAL),
                 TimeUnit.SECONDS
         );
 
-        strategyManager.addStrategy(scalingStrategy, migrationStrategy);
+        strategyManager.addStrategy("scaling", scalingStrategy);
+        strategyManager.addStrategy("migration", migrationStrategy);
 
         strategyManager.onStartup(this);
 
@@ -136,13 +157,57 @@ public class MultiPaperVelocity {
             @Override
             public void onDisconnect(ServerConnection.ServerConnectionInfo connection) {
                 RegisteredServer s = server.getServer(connection.name()).orElse(null);
-                server.unregisterServer(
-                        new ServerInfo(connection.name(), new InetSocketAddress(connection.host(), connection.port()))
-                );
-                logger.info("Unregistered server {}", connection.name());
                 strategyManager.onServerUnregister(s);
             }
         });
+    }
+
+    public void setStrategy(String behaviour, String name) {
+        switch (behaviour) {
+            case "server-selection" -> {
+                serverSelectionStrategy = strategyManager.loadStrategy(
+                        "serverselection.strategy.",
+                        name,
+                        ServerSelectionStrategy.class
+                );
+                logger.info("Server selection strategy set to {}", name);
+            }
+            case "drain" -> {
+                drainStrategy = strategyManager.loadStrategy(
+                        "drain.strategy.",
+                        name,
+                        DrainStrategy.class
+                );
+                logger.info("Drain strategy set to {}", name);
+            }
+            case "scaling" -> {
+                strategyManager.removeStrategy("scaling");
+                Strategy scalingStrategy = strategyManager.loadStrategy(
+                        "scaling.strategy.",
+                        name,
+                        Strategy.class,
+                        config.getLong("scaling.interval", (long) DEFAULT_SCALING_INTERVAL),
+                        TimeUnit.SECONDS
+                );
+                scalingStrategy.onStartup(this);
+                strategyManager.addStrategy("scaling", scalingStrategy);
+                logger.info("Scaling strategy set to {}", name);
+            }
+            case "migration" -> {
+                strategyManager.removeStrategy("migration");
+                Strategy migrationStrategy = strategyManager.loadStrategy(
+                        "migration.strategy.",
+                        name,
+                        Strategy.class,
+                        config.getLong("migration.interval", (long) DEFAULT_MIGRATION_INTERVAL),
+                        TimeUnit.SECONDS
+                );
+                migrationStrategy.onStartup(this);
+                strategyManager.addStrategy("migration", migrationStrategy);
+                logger.info("Migration strategy set to {}", name);
+            }
+            default -> logger.warn("Unknown strategy type: {}", behaviour);
+        }
     }
 
     public void transferPlayer(Player player, RegisteredServer to, int maxRetries) {
@@ -289,6 +354,22 @@ public class MultiPaperVelocity {
 
     public boolean executeDrainStrategy(String serverName) {
         Preconditions.checkNotNull(this.drainStrategy, "Drain strategy is not set");
-        return this.drainStrategy.drain(serverName, this);
+
+        RegisteredServer srv = server.getServer(serverName).orElse(null);
+
+        if (srv == null) {
+            logger.warn("Server {} is not registered", serverName);
+            return false;
+        }
+
+        // do not drain if this is the last server
+        if (server.getAllServers().size() <= 1) {
+            logger.warn("Cannot drain server {} because it is the last server", serverName);
+            return false;
+        }
+
+        server.unregisterServer(srv.getServerInfo());
+        logger.info("Unregistered server {}", serverName);
+        return this.drainStrategy.drain(srv, this);
     }
 }

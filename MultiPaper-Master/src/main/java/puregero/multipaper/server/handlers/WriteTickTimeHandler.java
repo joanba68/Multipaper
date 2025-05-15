@@ -13,6 +13,7 @@ public class WriteTickTimeHandler {
     public static void handle(ServerConnection connection, WriteTickTimeMessage message) {
         connection.getTimer().append(message.tickTime);
         connection.setTps(message.tps);
+        connection.setOwnedChunks(message.ownedChunks);
         
         if (message.tickTime == -1) {
             connection.setTps(-1);
