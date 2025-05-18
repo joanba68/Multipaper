@@ -4,7 +4,6 @@ port = 35353
 
 [server-selection]
 enabled = true
-strategy = "lowest_tick_time"
 #strategy = "lowest_tick_time"
 strategy = "weighted_tick_players"
 timeW = 5.0
@@ -18,7 +17,7 @@ strategy = "default"
 [scaling]
 enabled = true
 #strategy = "none" # none means no scaling
-strategy = "tick_length_v2"
+strategy = "tick_length_v3"
 scaleUpRatio = 0.3
 scaling-interval = 30
 
