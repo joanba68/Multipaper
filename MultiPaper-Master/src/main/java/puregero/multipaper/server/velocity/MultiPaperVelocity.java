@@ -80,6 +80,12 @@ public class MultiPaperVelocity {
                         .build(),
                 StrategyCommand.create(this)
         );
+        commandManager.register(
+                commandManager.metaBuilder("strategyconfig")
+                        .plugin(this)
+                        .build(),
+                StrategyConfigCommand.create(this)
+        );
 
         config = this.readConfig();
 
@@ -348,8 +354,16 @@ public class MultiPaperVelocity {
         return serverSelectionStrategy;
     }
 
+    public DrainStrategy getDrainStrategy() {
+        return drainStrategy;
+    }
+
     public ScalingManager getScalingManager() {
         return scalingManager;
+    }
+
+    public StrategyManager getStrategyManager() {
+        return strategyManager;
     }
 
     public boolean executeDrainStrategy(String serverName) {
@@ -372,4 +386,6 @@ public class MultiPaperVelocity {
         logger.info("Unregistered server {}", serverName);
         return this.drainStrategy.drain(srv, this);
     }
+
+
 }

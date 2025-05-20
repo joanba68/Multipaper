@@ -160,4 +160,12 @@ public class TickPlayerRatio extends BaseStrategy {
             }
         });
     }
+
+    public int getThreshold() {
+        return threshold;
+    }
+
+    public void setThreshold(int threshold) {
+        this.threshold = threshold;
+    }
 }

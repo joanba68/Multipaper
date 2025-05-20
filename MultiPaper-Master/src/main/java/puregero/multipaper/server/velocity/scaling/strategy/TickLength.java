@@ -108,4 +108,20 @@ public class TickLength extends BaseStrategy {
             disableScaling = true;
         }
     }
+
+    public int getMsptHigh() {
+        return msptHigh;
+    }
+
+    public int getMsptLow() {
+        return msptLow;
+    }
+
+    public void setMsptHigh(int msptHigh) {
+        this.msptHigh = msptHigh;
+    }
+
+    public void setMsptLow(int msptLow) {
+        this.msptLow = msptLow;
+    }
 }

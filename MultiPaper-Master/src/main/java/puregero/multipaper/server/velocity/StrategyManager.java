@@ -25,6 +25,10 @@ public class StrategyManager {
         strategies.remove(name);
     }
 
+    public Strategy getStrategy(String name) {
+        return strategies.get(name);
+    }
+
     public void onStartup(MultiPaperVelocity plugin) {
         strategies.values().forEach(strategy -> {
             strategy.onStartup(plugin);
