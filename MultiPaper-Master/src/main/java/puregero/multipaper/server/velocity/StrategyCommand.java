@@ -5,18 +5,52 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.text.Component;
+import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class StrategyCommand {
-
-    private final static Map<String, List<String>> strategies = Map.of(
-            "server-selection", List.of("random", "lowest-players", "lowest-tick-time"),
-            "scaling", List.of("none", "tick-length"),
-            "migration", List.of("none", "tick-player-ratio"),
-            "drain", List.of("default")
+    private final static Set<String> behaviours = Set.of(
+            "server-selection",
+            "scaling",
+            "migration",
+            "drain"
     );
+
+    private final static Map<String, List<String>> strategies = behaviours
+            .stream()
+            .map(behaviour -> behaviour.replaceAll("-", ""))
+            .collect(Collectors.toMap(
+                    Function.identity(),
+                    StrategyCommand::getStrategies
+            ));
+
+    private static List<String> getStrategies(String behaviour) {
+        String packageName = StrategyCommand.class.getPackageName() + "." + behaviour + ".strategy";
+        Reflections reflections = new Reflections(
+                new ConfigurationBuilder()
+                        .addUrls(ClasspathHelper.forClassLoader(ClasspathHelper.staticClassLoader()))
+                        .setScanners(Scanners.SubTypes.filterResultsBy((s -> true)))
+                        .filterInputsBy(
+                                new FilterBuilder()
+                                        .includePackage(StrategyCommand.class.getPackageName())
+                        )
+        );
+        return reflections
+                .getSubTypesOf(Object.class)
+                .stream()
+                .filter(Predicate.not(Class::isInterface))
+                .filter(clazz -> clazz.getPackageName().startsWith(packageName))
+                .map(StrategyManager::getStrategyName)
+                .collect(Collectors.toList());
+    }
 
     public static BrigadierCommand create(MultiPaperVelocity plugin) {
         return new BrigadierCommand(BrigadierCommand.literalArgumentBuilder("strategy")
@@ -32,7 +66,7 @@ public class StrategyCommand {
                 })
                 .then(BrigadierCommand.requiredArgumentBuilder("behaviour", StringArgumentType.word())
                         .suggests((context, builder) -> {
-                            for (String behaviour : strategies.keySet())
+                            for (String behaviour : behaviours)
                                 builder.suggest(behaviour);
                             return builder.buildFuture();
                         })
@@ -46,7 +80,7 @@ public class StrategyCommand {
                                                     + ":"
                                     )
                             );
-                            strategies.get(behaviour).forEach(strategy -> {
+                            strategies.get(behaviour.replaceAll("-", "")).forEach(strategy -> {
                                 source.sendMessage(Component.text("  " + strategy));
                             });
                             return Command.SINGLE_SUCCESS;
@@ -54,7 +88,7 @@ public class StrategyCommand {
                         .then(BrigadierCommand.requiredArgumentBuilder("strategy", StringArgumentType.word())
                                 .suggests((context, builder) -> {
                                     String behaviour = StringArgumentType.getString(context, "behaviour");
-                                    for (String strategy : strategies.get(behaviour))
+                                    for (String strategy : strategies.get(behaviour.replaceAll("-", "")))
                                         builder.suggest(strategy);
                                     return builder.buildFuture();
                                 })

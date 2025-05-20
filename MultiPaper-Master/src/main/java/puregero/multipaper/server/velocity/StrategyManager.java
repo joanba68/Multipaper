@@ -61,9 +61,10 @@ public class StrategyManager {
         if (strategyName.isEmpty())
             logger.warn("Strategy name for {} is not set, using default strategy", strategyClass.getSimpleName());
 
-        strategyName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, strategyName);
         try {
-            Class<?> clazz = Class.forName(getClass().getPackageName() + "." + packagePrefix + strategyName);
+            Class<?> clazz = Class.forName(
+                    getClass().getPackageName() + "." + packagePrefix + getClassName(strategyName)
+            );
             if (strategyClass.isAssignableFrom(clazz)) {
                 T strategy = (T) clazz.getConstructor(getConstructorParameterTypes(constructorArgs))
                         .newInstance(constructorArgs);
@@ -77,6 +78,14 @@ public class StrategyManager {
             logger.warn("Failed to load strategy: {}", strategyName, e);
         }
         return null;
+    }
+
+    public static String getStrategyName(Class<?> clazz) {
+        return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, clazz.getSimpleName());
+    }
+
+    public static String getClassName(String strategyName) {
+        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, strategyName);
     }
 
     private static Class<?>[] getConstructorParameterTypes(Object... args) {
