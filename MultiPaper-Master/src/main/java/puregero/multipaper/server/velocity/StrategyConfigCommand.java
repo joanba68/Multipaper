@@ -43,10 +43,52 @@ public class StrategyConfigCommand {
         }
     }
 
+    public static List<Method> getAllMethods(List<Method> methods, Class<?> clazz) {
+        if (clazz == null)
+            return methods;
+        methods.addAll(List.of(clazz.getDeclaredMethods()));
+        getAllMethods(methods, clazz.getSuperclass());
+        return methods;
+    }
+
+    public static List<Method> getAllMethods(Class<?> clazz) {
+        return getAllMethods(new ArrayList<>(), clazz);
+    }
+
+    public static List<Field> getAllFields(List<Field> fields, Class<?> clazz) {
+        if (clazz == null)
+            return fields;
+        fields.addAll(List.of(clazz.getDeclaredFields()));
+        getAllFields(fields, clazz.getSuperclass());
+        return fields;
+    }
+
+    public static List<Field> getAllFields(Class<?> clazz) {
+        return getAllFields(new ArrayList<>(), clazz);
+    }
+
+    public static Method getMethod(Class<?> clazz, String name, Class<?>... parameterTypes) {
+        return getAllMethods(clazz)
+                .stream()
+                .filter(method -> method.getName().equals(name))
+                .filter(method -> Arrays.equals(method.getParameterTypes(), parameterTypes))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    public static Field getField(Class<?> clazz, String name) {
+        return getAllFields(clazz)
+                .stream()
+                .filter(field -> field.getName().equals(name))
+                .findFirst()
+                .orElseThrow();
+    }
+
     public static Set<String> getConfigurableValues(Object strategy) {
         if (strategy == null)
             return Collections.emptySet();
-        return Arrays.stream(strategy.getClass().getDeclaredMethods())
+        return getAllMethods(strategy.getClass())
+                .stream()
                 .filter(method -> Modifier.isPublic(method.getModifiers()))
                 .filter(method -> method.getName().startsWith("set"))
                 .filter(method -> method.getParameterCount() == 1)
@@ -55,8 +97,8 @@ public class StrategyConfigCommand {
                         String variableName = getVariableName(name);
                         if (variableName == null)
                             return false;
-                        return isAllowableType(strategy.getClass().getDeclaredField(variableName));
-                    } catch (NoSuchFieldException e) {
+                        return isAllowableType(getField(strategy.getClass(), variableName));
+                    } catch (NoSuchElementException e) {
                         return false;
                     }
                 })
@@ -64,31 +106,31 @@ public class StrategyConfigCommand {
                 .collect(Collectors.toSet());
     }
 
-    public static String getFieldValue(Object strategy, String minecraftName) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public static String getFieldValue(Object strategy, String minecraftName)
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         if (strategy == null)
             return null;
         String javaName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, minecraftName);
-        Method method = strategy.getClass().getDeclaredMethod("get" + javaName);
+        Method method = getMethod(strategy.getClass(), "get" + javaName);
         if (method.getParameterCount() != 0)
-            return null;
+            throw new IllegalArgumentException("Method has wrong number of parameters");
+        if (method.getReturnType() == void.class || method.getReturnType() == Void.class)
+            throw new IllegalArgumentException("Method has void return type");
         if (!Modifier.isPublic(method.getModifiers()))
-            return null;
+            throw new IllegalArgumentException("Method is not public");
         Object value = method.invoke(strategy);
         if (value == null)
-            return null;
+            throw new IllegalArgumentException("Value is null");
         return String.valueOf(value);
     }
 
-    public static void setFieldValue(Object strategy, String minecraftName, String value) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public static void setFieldValue(Object strategy, String minecraftName, String value)
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         if (strategy == null)
             throw new IllegalArgumentException("Strategy is null");
         String javaName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, minecraftName);
-        Method method = Arrays.stream(strategy.getClass().getDeclaredMethods())
-                .filter(m -> m.getName().equals("set" + javaName))
-                .findFirst()
-                .orElse(null);
-        if (method == null)
-            throw new IllegalArgumentException("Method not found");
+        Class<?> fieldType = getMethod(strategy.getClass(), "get" + javaName).getReturnType();
+        Method method = getMethod(strategy.getClass(), "set" + javaName, fieldType);
         if (method.getParameterCount() != 1)
             throw new IllegalArgumentException("Method has wrong number of parameters");
         if (!Modifier.isPublic(method.getModifiers()))
@@ -148,7 +190,11 @@ public class StrategyConfigCommand {
                 //.requires(source -> source.hasPermission("multipaper.command.strategyconfig")) // needs luckperms on velocity
                 .executes(context -> {
                     CommandSource source = context.getSource();
-                    source.sendMessage(Component.text("You can change the configurable values for the following behaviors:"));
+                    source.sendMessage(
+                            Component.text(
+                                    "You can change the configurable values for the following behaviors:"
+                            )
+                    );
                     source.sendMessage(Component.text("  Server selection"));
                     source.sendMessage(Component.text("  Server scaling"));
                     source.sendMessage(Component.text("  Player migration"));
@@ -199,7 +245,8 @@ public class StrategyConfigCommand {
                                         }
                                         source.sendMessage(Component.text(variable + ": " + value));
                                         return Command.SINGLE_SUCCESS;
-                                    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                                    } catch (NoSuchMethodException | InvocationTargetException |
+                                             IllegalAccessException e) {
                                         source.sendMessage(Component.text("Failed to get value for " + variable));
                                         source.sendMessage(Component.text("Error: " + e.getMessage()));
                                         return Command.SINGLE_SUCCESS;
@@ -216,7 +263,8 @@ public class StrategyConfigCommand {
                                                 setFieldValue(strategy, variable, value);
                                                 source.sendMessage(Component.text("Set " + variable + " to " + value));
                                                 return Command.SINGLE_SUCCESS;
-                                            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                                            } catch (NoSuchMethodException | InvocationTargetException |
+                                                     IllegalAccessException e) {
                                                 source.sendMessage(Component.text("Failed to set " + variable + " to " + value));
                                                 source.sendMessage(Component.text("Error: " + e.getMessage()));
                                                 return Command.SINGLE_SUCCESS;

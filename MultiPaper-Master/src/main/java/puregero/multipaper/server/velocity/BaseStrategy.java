@@ -57,4 +57,16 @@ public class BaseStrategy implements Strategy {
     @Override
     public void executeStrategy() {
     }
+
+    public long getInterval() {
+        return interval;
+    }
+
+    public void setInterval(long interval) {
+        this.interval = interval;
+        this.task.cancel();
+        this.task = plugin.getProxy().getScheduler().buildTask(plugin, this::executeStrategy)
+                .repeat(interval, timeUnit)
+                .schedule();
+    }
 }
