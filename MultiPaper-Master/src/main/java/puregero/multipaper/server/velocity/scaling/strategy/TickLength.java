@@ -12,9 +12,11 @@ import java.util.concurrent.TimeUnit;
 public class TickLength extends BaseStrategy {
     private static final int DEFAULT_MSPT_HIGH = 40;
     private static final int DEFAULT_MSPT_LOW = 10;
+    private static final double DEFAULT_SCALEUP_RATIO = 1;
 
     private int msptHigh;
     private int msptLow;
+    private double scaleUpRatio;
 
     private boolean disableScaling = false;
 
@@ -27,6 +29,7 @@ public class TickLength extends BaseStrategy {
         super.onStartup(plugin);
         this.msptHigh = Math.toIntExact(config.getLong("scaling.tick_length.high", (long) DEFAULT_MSPT_HIGH));
         this.msptLow = Math.toIntExact(config.getLong("scaling.tick_length.low", (long) DEFAULT_MSPT_LOW));
+        this.scaleUpRatio = config.getDouble("scaling.tick_length.scaleup_ratio", DEFAULT_SCALEUP_RATIO);
     }
 
     @Override
@@ -56,10 +59,10 @@ public class TickLength extends BaseStrategy {
                 .getProxy()
                 .getAllServers();
 
-        // if all servers are above the threshold, scale up
-        boolean scaleUp = allServers
+        // scale up if there are too many servers above the threshold
+        long count = allServers
                 .stream()
-                .map(server -> {
+                .filter(server -> {
                     double mspt = ServerConnection
                             .getConnection(server.getServerInfo().getName())
                             .getTimer()
@@ -67,8 +70,10 @@ public class TickLength extends BaseStrategy {
                     logger.info("Server {} mspt: {}", server.getServerInfo().getName(), mspt);
                     return mspt > msptHigh;
                 })
-                .reduce(Boolean::logicalAnd)
-                .orElse(false);
+                .count();
+
+        long size = allServers.size();
+        boolean scaleUp = size > 0 && count >= (scaleUpRatio * size);
 
         if (scaleUp) {
             logger.info("Scaling up, all servers are above the threshold");
@@ -123,5 +128,13 @@ public class TickLength extends BaseStrategy {
 
     public void setMsptLow(int msptLow) {
         this.msptLow = msptLow;
+    }
+
+    public double getScaleUpRatio() {
+        return scaleUpRatio;
+    }
+
+    public void setScaleUpRatio(double scaleUpRatio) {
+        this.scaleUpRatio = scaleUpRatio;
     }
 }
