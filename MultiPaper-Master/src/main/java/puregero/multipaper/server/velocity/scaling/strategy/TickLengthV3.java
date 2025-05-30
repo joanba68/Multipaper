@@ -46,6 +46,8 @@ public class TickLengthV3 extends BaseStrategy {
     private boolean scalingUp;
     private double scaleDownRatio;
     private boolean scalingDown;
+    //private int waitT;
+    //private int waitScaling;
     private double red;
     private int minServers;
 
@@ -64,12 +66,12 @@ public class TickLengthV3 extends BaseStrategy {
         this.scaleDownRatio  = config.getDouble("scaling.scaleDownRatio", DEFAULT_SCALEDOWN_RATIO);
         this.interval        = config.getLong("scaling.interval", DEFAULT_INTERVAL);
         this.timeUnit        = TimeUnit.valueOf(config.getString("scaling.units", DEFAULT_UNIT_TIME));
-        this.waitT           = Math.toIntExact(config.getLong("scaling.waitT", (long) DEFAULT_WAITT));
+        //this.waitT           = Math.toIntExact(config.getLong("scaling.waitT", (long) DEFAULT_WAITT));
         this.minServers      = Math.toIntExact(config.getLong("scaling.minServers", (long) DEFAULT_MIN_SERVERS_DOWN));
 
         this.scalingUp   = false;
         this.scalingDown = false;
-        this.waitScaling = 0;
+        //this.waitScaling = 0;
 
         plugin.getProxy().getScheduler().buildTask(plugin, this::executeStrategy)
             .repeat(interval, timeUnit)
