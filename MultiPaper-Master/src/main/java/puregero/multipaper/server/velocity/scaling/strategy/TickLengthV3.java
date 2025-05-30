@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
@@ -45,8 +46,6 @@ public class TickLengthV3 extends BaseStrategy {
     private boolean scalingUp;
     private double scaleDownRatio;
     private boolean scalingDown;
-    private int waitT;
-    private int waitScaling;
     private double red;
     private int minServers;
 
@@ -76,25 +75,22 @@ public class TickLengthV3 extends BaseStrategy {
             .repeat(interval, timeUnit)
             .schedule();
 
-        plugin.getProxy().getScheduler().buildTask(plugin, this::checkScaling)
-            .repeat(interval, timeUnit)
-            .schedule();
     }
 
-    public void checkScaling() {
-        if(waitScaling < waitT) {
-            logger.info("TickLengthv3: No scale up/down operations in progress");
-            waitScaling += 1;
-        } else if (scalingUp) {
-            logger.info("TickLengthv3: Cleaning scale up lock");
+    @Override
+    public void onServerRegister(RegisteredServer server) {
+        if (scalingUp) {
+            logger.info("New server registered, enabling scaling again");
             scalingUp = false;
-            waitScaling = 0;
-        } else if (scalingDown) {
-            logger.info("TickLengthv3: Cleaning scale down lock");
-            scalingDown = false;
-            waitScaling = 0;
         }
+    }
 
+    @Override
+    public void onServerUnregister(RegisteredServer server) {
+        if (scalingDown) {
+            logger.info("Server unregistered, enabling scaling again");
+            scalingDown = false;
+        }
     }
 
     @Override
@@ -102,7 +98,6 @@ public class TickLengthV3 extends BaseStrategy {
 
         long redServers;
         long scaleUpServers;
-        long scaleDownServers;
 
         Collection<RegisteredServer> allServers = plugin
                 .getProxy()
@@ -133,7 +128,6 @@ public class TickLengthV3 extends BaseStrategy {
         //long counterOk  = serversOk.length;
 
         // Now to consider scale up servers
-
         logger.info("TickLengthv3: Servers with degraded tick time: {}", counterBad);
 
         redServers      = (long) Math.round(red * (double) allServers.size());
@@ -147,9 +141,10 @@ public class TickLengthV3 extends BaseStrategy {
         } else if (scalingUp == false) {
             // scaling only if there are not previous operations in place
             logger.info("TickLengthv3: Servers with degraded tick time: {}, required {} servers for scale up", counterBad, scaleUpServers);
-           
+            logger.info("TickLengthv3: Scaling one server...");
+
             scalingUp = true;
-            //plugin.getScalingManager().scaleUp();
+            plugin.getScalingManager().scaleUp();
         }
 
         // don't scale down if there is only one server
@@ -174,13 +169,13 @@ public class TickLengthV3 extends BaseStrategy {
             logger.info("TickLengthv3: Scaling down {} servers", serversDown);
 
             scalingDown = true;
-        //     allServers
-        //             .stream()
-        //             .limit(serversDown)
-        //             .min(Comparator.comparingInt(s -> s.getPlayersConnected().size()))
-        //             .ifPresent(server -> {
-        //                 plugin.getScalingManager().deletePod(server.getServerInfo().getName());
-        //             });
+            allServers
+                    .stream()
+                    .limit(serversDown)
+                    .min(Comparator.comparingInt(s -> s.getPlayersConnected().size()))
+                    .ifPresent(server -> {
+                        plugin.getScalingManager().deletePod(server.getServerInfo().getName());
+                    });
         }
     }
 }

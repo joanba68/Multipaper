@@ -1,5 +1,5 @@
 [master]
-timer-size = 60
+timer-size = 10
 port = 35353
 
 [server-selection]
