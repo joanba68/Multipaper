@@ -77,7 +77,7 @@ public class EasyStrategy extends BaseStrategy {
 
         // at startup time there are no registered servers...
         if (allServers.size() == 0) {
-            logger.info("EasyStrategy: Waiting for servers before starting migration strategy");
+            logger.info("Waiting for servers before starting migration strategy");
             return;
         }
 
@@ -97,11 +97,14 @@ public class EasyStrategy extends BaseStrategy {
         ServerWithData[] serversOk  = partitionedServers.get(false).toArray(new ServerWithData[0]);
 
         long counterBad = serversBad.length;
-        long counterOk  = serversOk.length;
+        //long counterOk  = serversOk.length;
 
         // Now to consider migration of players
 
-        logger.info("EasyStrategy: Servers with degraded tick time: {}", counterBad);
+        logger.info("Servers with degraded tick time: {}", counterBad);
+        for (ServerWithData serverX : serversWD){
+            logger.info("Server {} has {} players", serverX.server.getServerInfo().getName(), serverX.players);
+        }
 
         redServers      = (long) Math.round(red * (double) counterBad);
         
@@ -109,13 +112,13 @@ public class EasyStrategy extends BaseStrategy {
         // if there is a low nº of servers, ex: 2 servers --> yellow = red = 1
         // we can set a rule: if nº of servers < 5 only scale up is an option
         if (allServers.size() <= minServers) {
-            logger.info("EasyStrategy: Not enough servers for player migrations");
+            logger.info("Not enough servers for player migrations");
             return;
         }
 
         // From here, we have servers with degraded tick time and enough servers to migrate players
         if (counterBad < redServers) {
-            logger.info("EasyStrategy: Required players transfer");
+            logger.info("Required players transfer");
             
             // how many players to transfer ??
             long playersToTransfer = 0;
@@ -129,9 +132,9 @@ public class EasyStrategy extends BaseStrategy {
                     serverWD.server.getPlayersConnected().stream()
                         .limit(playersToTransfer)
                         .forEach(player -> plugin.transferPlayer(player, candidate.server, 5));
-                    logger.info("EasyStrategy: Transferring {} players to another server", playersToTransfer); 
+                    logger.info("Transferring {} players to another server", playersToTransfer); 
                 } else {
-                    logger.info("EasyStrategy: Not possible to transfer players to {}", candidate.server);
+                    logger.info("Not possible to transfer players to {}", candidate.server);
                 }
             }
         } 

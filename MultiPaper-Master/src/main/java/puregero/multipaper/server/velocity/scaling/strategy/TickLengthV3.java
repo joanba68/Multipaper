@@ -35,10 +35,11 @@ public class TickLengthV3 extends BaseStrategy {
     private static final double DEFAULT_RED_RATIO = 0.6;
     private static final long DEFAULT_INTERVAL = 2;
     private static final String DEFAULT_UNIT_TIME = "MINUTES";
-    private static final long DEFAULT_WAITT = 10;
+    //private static final long DEFAULT_WAITT = 10;
     private static final double DEFAULT_SCALEUP_RATIO = 0.3;
     private static final double DEFAULT_SCALEDOWN_RATIO = 0.3;
     private static final int DEFAULT_MIN_SERVERS_DOWN = 5;
+    private static final int DEFAULT_MAX_SERVERS_UP = 10;
 
     private int msptHigh;
     private int msptLow;
@@ -50,6 +51,7 @@ public class TickLengthV3 extends BaseStrategy {
     //private int waitScaling;
     private double red;
     private int minServers;
+    private int maxServers;
 
     public TickLengthV3(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
@@ -68,6 +70,7 @@ public class TickLengthV3 extends BaseStrategy {
         this.timeUnit        = TimeUnit.valueOf(config.getString("scaling.units", DEFAULT_UNIT_TIME));
         //this.waitT           = Math.toIntExact(config.getLong("scaling.waitT", (long) DEFAULT_WAITT));
         this.minServers      = Math.toIntExact(config.getLong("scaling.minServers", (long) DEFAULT_MIN_SERVERS_DOWN));
+        this.maxServers      = Math.toIntExact(config.getLong("scaling.maxServers", (long) DEFAULT_MAX_SERVERS_UP));
 
         this.scalingUp   = false;
         this.scalingDown = false;
@@ -107,7 +110,7 @@ public class TickLengthV3 extends BaseStrategy {
 
         // at startup time there are no registered servers...
         if (allServers.size() == 0) {
-            logger.info("TickLengthv3: Waiting for servers before starting scaling strategy");
+            logger.info("Waiting for servers before starting scaling strategy");
             return;
         }
 
@@ -130,28 +133,31 @@ public class TickLengthV3 extends BaseStrategy {
         //long counterOk  = serversOk.length;
 
         // Now to consider scale up servers
-        logger.info("TickLengthv3: Servers with degraded tick time: {}", counterBad);
+        logger.info("Servers with degraded tick time: {}", counterBad);
 
         redServers      = (long) Math.round(red * (double) allServers.size());
         scaleUpServers  = (long) Math.round(scaleUpRatio * (double) counterBad);
+        logger.info("Required {} degraded servers for scale up", counterBad, scaleUpServers);
         
         // From here, we have servers with degraded tick time and enough servers to migrate players
         // if too many servers are degraded, no need to migrate, should be scale up from scaling manager
 
         if (counterBad < redServers) {
-            logger.info("TickLengthv3: No scale up needed");
+            logger.info("No scale up needed");
         } else if (scalingUp == false) {
             // scaling only if there are not previous operations in place
-            logger.info("TickLengthv3: Servers with degraded tick time: {}, required {} servers for scale up", counterBad, scaleUpServers);
-            logger.info("TickLengthv3: Scaling one server...");
-
-            scalingUp = true;
-            plugin.getScalingManager().scaleUp();
+        
+            int count = allServers.size();
+            if (count < maxServers) {
+                logger.info("Scaling one server now there are {} servers...", count);
+                scalingUp = true;
+                plugin.getScalingManager().scaleUp();
+            }
         }
 
         // don't scale down if there is only one server
         if(allServers.size() <= minServers) {
-            logger.info("TickLengthv3: There are no servers to scale down");
+            logger.info("There are no servers to scale down");
             return;
         }
 
@@ -168,7 +174,7 @@ public class TickLengthV3 extends BaseStrategy {
         // delete the server with the lowest amount of players
         if (scaleDown) {
             int serversDown = (int) Math.round((double) scaleDownRatio * (long) allServers.size());
-            logger.info("TickLengthv3: Scaling down {} servers", serversDown);
+            logger.info("Scaling down {} servers", serversDown);
 
             scalingDown = true;
             allServers
