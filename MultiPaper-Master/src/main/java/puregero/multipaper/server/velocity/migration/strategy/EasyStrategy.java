@@ -75,6 +75,10 @@ public class EasyStrategy extends BaseStrategy {
                 .getProxy()
                 .getAllServers();
 
+        for (RegisteredServer serverX : allServers){
+            logger.info("Server {} has {} players", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size());
+        }
+
         // at startup time there are no registered servers...
         if (allServers.size() == 0) {
             logger.info("Waiting for servers before starting migration strategy");
@@ -102,9 +106,6 @@ public class EasyStrategy extends BaseStrategy {
         // Now to consider migration of players
 
         logger.info("Servers with degraded tick time: {}", counterBad);
-        for (ServerWithData serverX : serversWD){
-            logger.info("Server {} has {} players", serverX.server.getServerInfo().getName(), serverX.players);
-        }
 
         redServers      = (long) Math.round(red * (double) counterBad);
         
