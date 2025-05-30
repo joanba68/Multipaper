@@ -52,9 +52,9 @@ public class EasyStrategy extends BaseStrategy {
     @Override
     public void onStartup(MultiPaperVelocity plugin) {
         super.onStartup(plugin);
-        this.msptHigh = Math.toIntExact(config.getLong("performance.tick_length.high", (long) DEFAULT_MSPT_HIGH));
-        this.msptLow  = Math.toIntExact(config.getLong("performance.tick_length.low", (long) DEFAULT_MSPT_LOW));
-        this.red      = config.getDouble("performance.tick_length.redL", DEFAULT_RED_RATIO);
+        this.msptHigh = Math.toIntExact(config.getLong("scaling.tick_length.high", (long) DEFAULT_MSPT_HIGH));
+        this.msptLow  = Math.toIntExact(config.getLong("scaling.tick_length.low", (long) DEFAULT_MSPT_LOW));
+        this.red      = config.getDouble("scaling.tick_length.redL", DEFAULT_RED_RATIO);
         
         this.playersT = config.getDouble("migration.playersT", DEFAULT_PLAYERS_TRANSFER);
         this.interval = config.getLong("migration.interval", DEFAULT_INTERVAL);
@@ -77,6 +77,7 @@ public class EasyStrategy extends BaseStrategy {
 
         for (RegisteredServer serverX : allServers){
             logger.info("Server {} has {} players", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size());
+            logger.info("Server {} has {} mseg. response time", serverX.getServerInfo().getName(), String.format("%.2g%n", ServerConnection.getConnection(serverX.getServerInfo().getName()).getTimer().averageInMillis()));
         }
 
         // at startup time there are no registered servers...
@@ -107,7 +108,7 @@ public class EasyStrategy extends BaseStrategy {
 
         logger.info("Servers with degraded tick time: {}", counterBad);
 
-        redServers      = (long) Math.round(red * (double) counterBad);
+        redServers = (long) Math.round(red * (double) counterBad);
         
         // From here, we have servers with degraded tick time
         // if there is a low nº of servers, ex: 2 servers --> yellow = red = 1
