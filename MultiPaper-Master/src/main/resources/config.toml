@@ -6,8 +6,8 @@ port = 35353
 enabled = true
 #strategy = "lowest_tick_time"
 strategy = "weighted_tick_players"
-timeW = 5.0
-playerW = 1.0
+timeW = 4.5
+playerW = 1.5
 
 [drain-server]
 enabled = true
@@ -20,7 +20,7 @@ enabled = true
 strategy = "tick_length_v3"
 scaleUpRatio = 0.3
 scaling-interval = 30
-minServers = 5
+minServers = 2
 maxServers = 15
 
 [scaling.tick_length]

@@ -12,9 +12,9 @@ import java.util.Map;
 public class StrategyCommand {
 
     private final static Map<String, List<String>> strategies = Map.of(
-            "server-selection", List.of("random", "lowest-players", "lowest-tick-time"),
-            "scaling", List.of("none", "tick-length"),
-            "migration", List.of("none", "tick-player-ratio"),
+            "server-selection", List.of("random", "lowest-players", "lowest-tick-time", "weighted-tick-players"),
+            "scaling", List.of("none", "tick-length", "tick-length-v3"),
+            "migration", List.of("none", "tick-player-ratio", "easy-strategy"),
             "drain", List.of("default")
     );
 
