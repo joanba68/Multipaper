@@ -51,9 +51,7 @@ public class EasyStrategy extends BaseStrategy {
 
     @Override
     public void onStartup(MultiPaperVelocity plugin) {
-        //super.onStartup(plugin);
-        this.plugin = plugin;
-        this.config = plugin.getConfig();
+        super.onStartup(plugin);
         this.msptHigh = Math.toIntExact(config.getLong("scaling.tick_length.high", (long) DEFAULT_MSPT_HIGH));
         this.msptLow  = Math.toIntExact(config.getLong("scaling.tick_length.low", (long) DEFAULT_MSPT_LOW));
         this.red      = config.getDouble("scaling.tick_length.redL", DEFAULT_RED_RATIO);
