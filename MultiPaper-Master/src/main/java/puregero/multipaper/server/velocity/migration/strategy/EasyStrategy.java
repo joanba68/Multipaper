@@ -78,6 +78,7 @@ public class EasyStrategy extends BaseStrategy {
         for (RegisteredServer serverX : allServers){
             logger.info("Server {} has {} players", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size());
             logger.info("Server {} has {} mseg. response time", serverX.getServerInfo().getName(), String.format("%.2g", ServerConnection.getConnection(serverX.getServerInfo().getName()).getTimer().averageInMillis()));
+            logger.info("Server {} has {} address", serverX.getServerInfo().getName(), serverX.getServerInfo().getAddress());
         }
 
         // at startup time there are no registered servers...
