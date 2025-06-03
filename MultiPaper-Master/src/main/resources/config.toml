@@ -31,4 +31,5 @@ high = 41
 #strategy = "none" # none means no migration
 strategy = "easy_strategy"
 migration-interval = 31
+minServers = 3
 

@@ -37,6 +37,7 @@ public class WeightedTickPlayers implements ServerSelectionStrategy {
                 bestServer = server;
             }
         }
+        plugin.getLogger().info("Best quality found: {} for server {}", bestQuality, bestServer);
 
         return bestServer;
     }

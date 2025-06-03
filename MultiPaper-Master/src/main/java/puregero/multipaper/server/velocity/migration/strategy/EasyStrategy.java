@@ -75,16 +75,16 @@ public class EasyStrategy extends BaseStrategy {
                 .getProxy()
                 .getAllServers();
 
-        for (RegisteredServer serverX : allServers){
-            logger.info("Server {} has {} players", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size());
-            logger.info("Server {} has {} mseg. response time", serverX.getServerInfo().getName(), String.format("%.2g", ServerConnection.getConnection(serverX.getServerInfo().getName()).getTimer().averageInMillis()));
-            logger.info("Server {} has {} address", serverX.getServerInfo().getName(), serverX.getServerInfo().getAddress());
-        }
-
         // at startup time there are no registered servers...
         if (allServers.size() == 0) {
             logger.info("Waiting for servers before starting migration strategy");
             return;
+        }
+
+        for (RegisteredServer serverX : allServers){
+            logger.info("Server {} has {} players", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size());
+            logger.info("Server {} has {} mseg. response time", serverX.getServerInfo().getName(), String.format("%.2g", ServerConnection.getConnection(serverX.getServerInfo().getName()).getTimer().averageInMillis()));
+            logger.info("Server {} has {} address", serverX.getServerInfo().getName(), serverX.getServerInfo().getAddress());
         }
 
         Collection<ServerWithData> serversWD = allServers
@@ -114,7 +114,7 @@ public class EasyStrategy extends BaseStrategy {
         // From here, we have servers with degraded tick time
         // if there is a low nº of servers, ex: 2 servers --> yellow = red = 1
         // we can set a rule: if nº of servers < 5 only scale up is an option
-        if (allServers.size() <= minServers) {
+        if (allServers.size() < minServers) {
             logger.info("Not enough servers for player migrations");
             return;
         }
