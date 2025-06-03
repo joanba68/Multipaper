@@ -165,7 +165,9 @@ public class MultiPaperVelocity {
                 logger.info("Connection from {} closed", connection.name());
                 RegisteredServer s = server.getServer(connection.name()).orElse(null);
                 strategyManager.onServerUnregister(s);
-                server.unregisterServer(s.getServerInfo());
+                if (s != null ) {
+                    server.unregisterServer(s.getServerInfo());
+                }
             }
         });
     }
