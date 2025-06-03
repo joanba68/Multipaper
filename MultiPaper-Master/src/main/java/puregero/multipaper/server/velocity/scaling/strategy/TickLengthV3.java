@@ -156,7 +156,7 @@ public class TickLengthV3 extends BaseStrategy {
         }
 
         // don't scale down if there is only one server
-        if(allServers.size() <= minServers) {
+        if(allServers.size() < minServers) {
             logger.info("There are no servers to scale down");
             return;
         }
