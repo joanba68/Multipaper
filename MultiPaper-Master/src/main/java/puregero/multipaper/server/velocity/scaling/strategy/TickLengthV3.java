@@ -38,7 +38,7 @@ public class TickLengthV3 extends BaseStrategy {
     //private static final long DEFAULT_WAITT = 10;
     private static final double DEFAULT_SCALEUP_RATIO = 0.3;
     private static final double DEFAULT_SCALEDOWN_RATIO = 0.3;
-    private static final int DEFAULT_MIN_SERVERS_DOWN = 5;
+    private static final int DEFAULT_MIN_SERVERS_DOWN = 2;
     private static final int DEFAULT_MAX_SERVERS_UP = 10;
 
     private int msptHigh;
@@ -155,9 +155,10 @@ public class TickLengthV3 extends BaseStrategy {
             }
         }
 
-        // don't scale down if there is only one server
+        // don't scale down if there is only a minimal number of servers
         if(allServers.size() < minServers) {
             logger.info("There are no servers to scale down");
+            logger.info("Now {} active servers, {} at least for scale down !!", allServers.size(), minServers);
             return;
         }
 
