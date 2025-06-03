@@ -162,8 +162,10 @@ public class MultiPaperVelocity {
 
             @Override
             public void onDisconnect(ServerConnection.ServerConnectionInfo connection) {
+                logger.info("Connection from {} closed", connection.name());
                 RegisteredServer s = server.getServer(connection.name()).orElse(null);
                 strategyManager.onServerUnregister(s);
+                server.unregisterServer(s.getServerInfo());
             }
         });
     }

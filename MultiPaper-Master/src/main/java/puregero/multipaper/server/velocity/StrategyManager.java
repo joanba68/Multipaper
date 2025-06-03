@@ -56,6 +56,7 @@ public class StrategyManager {
     public void onServerUnregister(RegisteredServer server) {
         strategies.values().forEach(strategy -> {
             strategy.onServerUnregister(server);
+            logger.info("Unregistering {} strategy", strategy);
         });
     }
 
