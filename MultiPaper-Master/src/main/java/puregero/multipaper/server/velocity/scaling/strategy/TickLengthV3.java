@@ -1,11 +1,11 @@
 package puregero.multipaper.server.velocity.scaling.strategy;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.Comparator;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
@@ -76,9 +76,9 @@ public class TickLengthV3 extends BaseStrategy {
         this.scalingDown = false;
         //this.waitScaling = 0;
 
-        plugin.getProxy().getScheduler().buildTask(plugin, this::executeStrategy)
-            .repeat(interval, timeUnit)
-            .schedule();
+        // plugin.getProxy().getScheduler().buildTask(plugin, this::executeStrategy)
+        //     .repeat(interval, timeUnit)
+        //     .schedule();
 
     }
 
@@ -104,6 +104,13 @@ public class TickLengthV3 extends BaseStrategy {
         long redServers;
         long scaleUpServers;
 
+        // Collection<RegisteredServer> allServers = plugin
+        //         .getProxy()
+        //         .getAllServers()
+        //         .stream()
+        //         .collect(Collectors.toList());
+
+        // Obtenir tots els servidors i filtrar els actius
         Collection<RegisteredServer> allServers = plugin
                 .getProxy()
                 .getAllServers();
@@ -112,6 +119,10 @@ public class TickLengthV3 extends BaseStrategy {
         if (allServers.size() == 0) {
             logger.info("Waiting for servers before starting scaling strategy");
             return;
+        }
+
+        for (RegisteredServer serverX : allServers){
+            logger.info("Server {} has {} players", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size());
         }
 
         Collection<ServerWithData> serversWD = allServers

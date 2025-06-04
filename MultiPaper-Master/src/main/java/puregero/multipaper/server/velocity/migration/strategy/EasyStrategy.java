@@ -61,9 +61,9 @@ public class EasyStrategy extends BaseStrategy {
         this.timeUnit = TimeUnit.valueOf(config.getString("migration.units", DEFAULT_UNIT_TIME));
         this.minServers  = Math.toIntExact(config.getLong("migration.minServers", (long) DEFAULT_MIN_SERVERS_MIG));
 
-        plugin.getProxy().getScheduler().buildTask(plugin, this::executeStrategy)
-            .repeat(interval, timeUnit)
-            .schedule();
+        // plugin.getProxy().getScheduler().buildTask(plugin, this::executeStrategy)
+        //     .repeat(interval, timeUnit)
+        //     .schedule();
     }
 
     @Override

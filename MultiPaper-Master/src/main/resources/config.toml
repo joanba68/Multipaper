@@ -19,7 +19,7 @@ enabled = true
 #strategy = "none" # none means no scaling
 strategy = "tick_length_v3"
 scaleUpRatio = 0.3
-scaling-interval = 30
+scaling-interval = 15
 minServers = 2
 maxServers = 15
 
