@@ -149,7 +149,7 @@ public class TickLengthV3 extends BaseStrategy {
         
             int count = allServers.size();
             if (count < maxServers) {
-                logger.info("Scaling 1 server now there are {} servers...", count);
+                logger.info("Scaling up 1 server now there are {} servers...", count);
                 scalingUp = true;
                 plugin.getScalingManager().scaleUp();
             }
@@ -176,6 +176,7 @@ public class TickLengthV3 extends BaseStrategy {
         if (scaleDown) {
             int serversDown = (int) Math.round((double) scaleDownRatio * (long) allServers.size());
             logger.info("Scaling down {} servers", serversDown);
+            logger.info("Now {} active servers, {} at least for scale down !!", allServers.size(), minServers);
 
             scalingDown = true;
             allServers

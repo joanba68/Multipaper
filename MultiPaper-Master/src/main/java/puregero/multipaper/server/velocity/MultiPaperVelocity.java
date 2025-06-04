@@ -165,9 +165,10 @@ public class MultiPaperVelocity {
                 logger.info("Connection from {} closed", connection.name());
                 RegisteredServer s = server.getServer(connection.name()).orElse(null);
                 strategyManager.onServerUnregister(s);
-                if (s != null ) {
-                    server.unregisterServer(s.getServerInfo());
-                }
+                // should not be needed here as drainStrategy should take care
+                //if (s != null ) {
+                //    server.unregisterServer(s.getServerInfo());
+                //}
             }
         });
     }
