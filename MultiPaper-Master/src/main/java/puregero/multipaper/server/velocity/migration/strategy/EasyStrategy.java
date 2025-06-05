@@ -13,21 +13,8 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
 import puregero.multipaper.server.velocity.MultiPaperVelocity;
+import puregero.multipaper.server.velocity.ServerWithData;
 
-class ServerWithData {
-
-    protected Boolean perf;
-    protected RegisteredServer server;
-    protected int players;
-
-    protected ServerWithData(Boolean perfDeg, RegisteredServer server, int players){
-        this.perf = perfDeg;
-        this.server = server;
-        this.players = players;
-
-    }
-
-}
 
 public class EasyStrategy extends BaseStrategy {
 
@@ -61,9 +48,6 @@ public class EasyStrategy extends BaseStrategy {
         this.timeUnit = TimeUnit.valueOf(config.getString("migration.units", DEFAULT_UNIT_TIME));
         this.minServers  = Math.toIntExact(config.getLong("migration.minServers", (long) DEFAULT_MIN_SERVERS_MIG));
 
-        // plugin.getProxy().getScheduler().buildTask(plugin, this::executeStrategy)
-        //     .repeat(interval, timeUnit)
-        //     .schedule();
     }
 
     @Override
@@ -84,7 +68,6 @@ public class EasyStrategy extends BaseStrategy {
         for (RegisteredServer serverX : allServers){
             logger.info("Server {} has {} players", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size());
             logger.info("Server {} has {} mseg. response time", serverX.getServerInfo().getName(), String.format("%.2g", ServerConnection.getConnection(serverX.getServerInfo().getName()).getTimer().averageInMillis()));
-            logger.info("Server {} has {} address", serverX.getServerInfo().getName(), serverX.getServerInfo().getAddress());
         }
 
         Collection<ServerWithData> serversWD = allServers
@@ -92,12 +75,13 @@ public class EasyStrategy extends BaseStrategy {
             .map(server -> new ServerWithData(
                 ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis() >= msptHigh,
                 server,
-                server.getPlayersConnected().size()))
+                server.getPlayersConnected().size(),
+                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis()))
             .collect(Collectors.toList());
 
         Map<Boolean, List<ServerWithData>> partitionedServers = serversWD
             .stream()
-            .collect(Collectors.partitioningBy(server -> server.perf));
+            .collect(Collectors.partitioningBy(server -> server.getPerf()));
 
         ServerWithData[] serversBad = partitionedServers.get(true).toArray(new ServerWithData[0]);
         ServerWithData[] serversOk  = partitionedServers.get(false).toArray(new ServerWithData[0]);
@@ -106,7 +90,6 @@ public class EasyStrategy extends BaseStrategy {
         //long counterOk  = serversOk.length;
 
         // Now to consider migration of players
-
         logger.info("Servers with degraded tick time: {}", counterBad);
 
         redServers = (long) Math.round(red * (double) counterBad);
@@ -126,18 +109,18 @@ public class EasyStrategy extends BaseStrategy {
             // how many players to transfer ??
             long playersToTransfer = 0;
             for (ServerWithData serverWD : serversBad){
-                playersToTransfer = (long) Math.round(playersT * (double) serverWD.players);           
+                playersToTransfer = (long) Math.round(playersT * (double) serverWD.getPlayers());           
             
                 // to which server ? to the one which is Ok with less players
-                ServerWithData candidate = Arrays.stream(serversOk).min(Comparator.comparingInt(serverX -> serverX.players)).orElse(null);
+                ServerWithData candidate = Arrays.stream(serversOk).min(Comparator.comparingInt(serverX -> serverX.getPlayers())).orElse(null);
 
                 if (candidate != null) {
-                    serverWD.server.getPlayersConnected().stream()
+                    serverWD.getServer().getPlayersConnected().stream()
                         .limit(playersToTransfer)
-                        .forEach(player -> plugin.transferPlayer(player, candidate.server, 5));
+                        .forEach(player -> plugin.transferPlayer(player, candidate.getServer(), 5));
                     logger.info("Transferring {} players to another server", playersToTransfer); 
                 } else {
-                    logger.info("Not possible to transfer players to {}", candidate.server);
+                    logger.info("Not possible to transfer players to {}", candidate.getServer());
                 }
             }
         } 

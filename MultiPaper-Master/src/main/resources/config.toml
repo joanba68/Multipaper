@@ -19,7 +19,7 @@ enabled = true
 #strategy = "none" # none means no scaling
 strategy = "tick_length_v3"
 scaleUpRatio = 0.3
-scaling-interval = 15
+interval = 30
 minServers = 2
 maxServers = 15
 
@@ -29,7 +29,8 @@ high = 41
 
 [migration]
 #strategy = "none" # none means no migration
-strategy = "easy_strategy"
-migration-interval = 31
+#strategy = "easy_strategy"
+strategy = "balance_players_strategy"
+interval = 31
 minServers = 2
 

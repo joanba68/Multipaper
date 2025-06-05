@@ -390,7 +390,7 @@ public class MultiPaperVelocity {
             return false;
         }
 
-        logger.info("Unregistered server {}", serverName);
+        logger.info("Starting players draining...");
         return this.drainStrategy.drain(srv, this);
     }
 

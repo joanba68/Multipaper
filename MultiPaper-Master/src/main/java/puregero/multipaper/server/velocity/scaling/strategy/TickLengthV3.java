@@ -12,21 +12,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
 import puregero.multipaper.server.velocity.MultiPaperVelocity;
-
-class ServerWithData {
-
-    protected Boolean perf;
-    protected RegisteredServer server;
-    protected int players;
-
-    protected ServerWithData(Boolean perfDeg, RegisteredServer server, int players){
-        this.perf = perfDeg;
-        this.server = server;
-        this.players = players;
-
-    }
-
-}
+import puregero.multipaper.server.velocity.ServerWithData;
 
 public class TickLengthV3 extends BaseStrategy {
 
@@ -76,10 +62,6 @@ public class TickLengthV3 extends BaseStrategy {
         this.scalingDown = false;
         //this.waitScaling = 0;
 
-        // plugin.getProxy().getScheduler().buildTask(plugin, this::executeStrategy)
-        //     .repeat(interval, timeUnit)
-        //     .schedule();
-
     }
 
     @Override
@@ -104,12 +86,6 @@ public class TickLengthV3 extends BaseStrategy {
         long redServers;
         long scaleUpServers;
 
-        // Collection<RegisteredServer> allServers = plugin
-        //         .getProxy()
-        //         .getAllServers()
-        //         .stream()
-        //         .collect(Collectors.toList());
-
         // Obtenir tots els servidors i filtrar els actius
         Collection<RegisteredServer> allServers = plugin
                 .getProxy()
@@ -130,12 +106,13 @@ public class TickLengthV3 extends BaseStrategy {
             .map(server -> new ServerWithData(
                 ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis() >= msptHigh,
                 server,
-                server.getPlayersConnected().size()))
+                server.getPlayersConnected().size(),
+                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis()))
             .collect(Collectors.toList());
 
         Map<Boolean, List<ServerWithData>> partitionedServers = serversWD
             .stream()
-            .collect(Collectors.partitioningBy(server -> server.perf));
+            .collect(Collectors.partitioningBy(server -> server.getPerf()));
 
         ServerWithData[] serversBad = partitionedServers.get(true).toArray(new ServerWithData[0]);
         //ServerWithData[] serversOk  = partitionedServers.get(false).toArray(new ServerWithData[0]);
@@ -148,7 +125,7 @@ public class TickLengthV3 extends BaseStrategy {
 
         redServers      = (long) Math.round(red * (double) allServers.size());
         scaleUpServers  = (long) Math.round(scaleUpRatio * (double) counterBad);
-        logger.info("Required {} degraded servers for scale up", scaleUpServers);
+        if (scaleUpServers != 0) logger.info("Required {} degraded servers for scale up", scaleUpServers);
         
         // From here, we have servers with degraded tick time and enough servers to migrate players
         // if too many servers are degraded, no need to migrate, should be scale up from scaling manager
@@ -168,7 +145,6 @@ public class TickLengthV3 extends BaseStrategy {
 
         // don't scale down if there is only a minimal number of servers
         if(allServers.size() < minServers) {
-            logger.info("There are no servers to scale down");
             logger.info("Now {} active servers, {} at least for scale down !!", allServers.size(), minServers);
             return;
         }
