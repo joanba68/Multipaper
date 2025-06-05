@@ -59,8 +59,9 @@ public class BalancePlayersStrategy extends BaseStrategy {
 
         for (RegisteredServer serverX : allServers){
             logger.info("Server {} has {} players", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size());
+            logger.info("Server {} has {} mseg. response time", serverX.getServerInfo().getName(), String.format("%.2g", ServerConnection.getConnection(serverX.getServerInfo().getName()).getTimer().averageInMillis()));
         }
-        logger.info("Here nº3");
+
         Collection<ServerWithData> serversWD = allServers
             .stream()
             .map(server -> new ServerWithData(
@@ -78,23 +79,28 @@ public class BalancePlayersStrategy extends BaseStrategy {
                 .filter(s -> s.getPerf() && s.getPlayers() <= idealPlayersPerServer * DEFAULT_PLAYERS_TRANSFER)
                 .min(Comparator.comparingDouble(s -> s.getMspt()));
         
-        if (!bestServer.isPresent()) {
-            logger.info("No healthy servers to transfer players found");
-            return;
-        }
-
+        // if (!bestServer.isPresent()) {
+        //     logger.info("No healthy servers to transfer players found");
+        //     return;
+        // }
+        
         // Identificar servidor amb perf degradada i mes jugadors
         Optional<ServerWithData> worstServer = serversWD.stream()
                 .filter(server -> !server.getPerf())
                 .max(Comparator.comparingInt(server -> server.getPlayers()));
 
-        if (!worstServer.isPresent()) {
-            logger.info("No degraded servers found");
-            return;
-        }
+        // if (!worstServer.isPresent()) {
+        //     logger.info("No degraded servers found");
+        //     return;
+        // }
+        
+        //logger.info("Server {} has {} players", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size());
 
         ServerWithData worst = worstServer.get();
         ServerWithData best = bestServer.get();
+
+        logger.info("Best server is {}", best.getServer().getServerInfo().getName());
+        logger.info("Worst server is {}", worst.getServer().getServerInfo().getName());
 
         long playersToMove = worst.getPlayers() - idealPlayersPerServer;
         long maxPlayersToMove = Math.round(idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER) - best.getPlayers());
