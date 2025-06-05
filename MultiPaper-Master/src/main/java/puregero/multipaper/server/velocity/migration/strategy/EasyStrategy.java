@@ -33,7 +33,7 @@ public class EasyStrategy extends BaseStrategy {
     private int minServers;
 
     public EasyStrategy(Long interval, TimeUnit timeUnit) {
-        super(Long.MAX_VALUE, TimeUnit.DAYS);
+        super(interval, timeUnit);
     }
 
     @Override

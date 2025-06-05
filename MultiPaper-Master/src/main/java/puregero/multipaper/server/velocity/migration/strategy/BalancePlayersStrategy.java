@@ -2,12 +2,12 @@ package puregero.multipaper.server.velocity.migration.strategy;
 
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.scheduler.ScheduledTask;
 
 import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
@@ -17,19 +17,16 @@ import puregero.multipaper.server.velocity.ServerWithData;
 public class BalancePlayersStrategy extends BaseStrategy {
 
     private static final int DEFAULT_MSPT_HIGH = 40;
-    private static final int DEFAULT_MSPT_LOW = 10;
-    private static final double DEFAULT_RED_RATIO = 0.6;
     private static final long DEFAULT_INTERVAL = 60;
     private static final String DEFAULT_UNIT_TIME = "SECONDS";
     private static final double DEFAULT_PLAYERS_TRANSFER = 0.2;
     private static final int DEFAULT_MIN_SERVERS_MIG = 5;
-    private static final double DEFAULT_DIF_FOR_PLAYERS = 0.2;
 
     private int msptHigh;
     private int minServers;
 
     public BalancePlayersStrategy(Long interval, TimeUnit timeUnit) {
-        super(Long.MAX_VALUE, TimeUnit.DAYS);
+        super(interval, timeUnit);
     }
 
     @Override
@@ -63,7 +60,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
         for (RegisteredServer serverX : allServers){
             logger.info("Server {} has {} players", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size());
         }
-
+        logger.info("Here nº3");
         Collection<ServerWithData> serversWD = allServers
             .stream()
             .map(server -> new ServerWithData(
@@ -78,7 +75,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
         int idealPlayersPerServer = totalPlayers / Math.max(1, serversWD.size());
 
         Optional<ServerWithData> bestServer = serversWD.stream()
-                .filter(s -> s.getPerf() && s.getPlayers() <= idealPlayersPerServer * DEFAULT_DIF_FOR_PLAYERS)
+                .filter(s -> s.getPerf() && s.getPlayers() <= idealPlayersPerServer * DEFAULT_PLAYERS_TRANSFER)
                 .min(Comparator.comparingDouble(s -> s.getMspt()));
         
         if (!bestServer.isPresent()) {
@@ -100,7 +97,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
         ServerWithData best = bestServer.get();
 
         long playersToMove = worst.getPlayers() - idealPlayersPerServer;
-        long maxPlayersToMove = Math.round(idealPlayersPerServer * (1 + DEFAULT_DIF_FOR_PLAYERS) - best.getPlayers());
+        long maxPlayersToMove = Math.round(idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER) - best.getPlayers());
         playersToMove = Math.min(playersToMove, maxPlayersToMove);
 
         if (playersToMove > 0) {            
