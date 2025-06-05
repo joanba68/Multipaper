@@ -98,11 +98,8 @@ public class TickLengthV3 extends BaseStrategy {
         }
 
         for (RegisteredServer serverX : allServers){
-            double mspt = ServerConnection.getConnection(serverX.getServerInfo().getName()).getTimer().averageInMillis();
-            logger.info("Server {} has {} players and {} mspt", 
-                serverX.getServerInfo().getName(), 
-                serverX.getPlayersConnected().size(), 
-                mspt);
+            double mspt = Math.round(ServerConnection.getConnection(serverX.getServerInfo().getName()).getTimer().averageInMillis());
+            logger.info("Server {} has {} players and {} mspt", serverX.getServerInfo().getName(), serverX.getPlayersConnected().size(), mspt);
         }
 
         Collection<ServerWithData> serversWD = allServers

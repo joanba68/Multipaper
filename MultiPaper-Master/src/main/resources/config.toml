@@ -32,6 +32,6 @@ high = 41
 #strategy = "easy_strategy"
 strategy = "balance_players_strategy"
 interval = 31
-minServers = 2
+minServers = 1
 
 

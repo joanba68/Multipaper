@@ -4,20 +4,20 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 
 public class ServerWithData {
 
-    protected Boolean perf;
+    protected Boolean degPerf;
     protected RegisteredServer server;
     protected int players;
     protected double mspt;
 
-    public ServerWithData(Boolean perfDeg, RegisteredServer server, int players, double time){
-        this.perf = perfDeg;
+    public ServerWithData(Boolean perf, RegisteredServer server, int players, double time){
+        this.degPerf = perf;
         this.server = server;
         this.players = players;
         this.mspt = time;
     }
 
     public Boolean getPerf() {
-        return perf;
+        return degPerf;
     }
 
     public RegisteredServer getServer() {
