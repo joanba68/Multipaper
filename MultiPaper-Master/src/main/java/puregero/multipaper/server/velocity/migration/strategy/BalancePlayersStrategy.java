@@ -113,9 +113,10 @@ public class BalancePlayersStrategy extends BaseStrategy {
             logger.info("No transfer possible as best and worst are the same !!");
             return;
         }
-
-        long playersToMove = worst.getPlayers() - idealPlayersPerServer;
-        long maxPlayersToMove = Math.round(idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER) - best.getPlayers());
+        
+        // playersToMove can be negative = worst server has less players than ideal number
+        long playersToMove = Math.abs(worst.getPlayers() - idealPlayersPerServer);
+        long maxPlayersToMove = Math.abs(Math.round(idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER) - best.getPlayers()));
         playersToMove = Math.min(playersToMove, maxPlayersToMove);
 
         if (playersToMove == 0) {
