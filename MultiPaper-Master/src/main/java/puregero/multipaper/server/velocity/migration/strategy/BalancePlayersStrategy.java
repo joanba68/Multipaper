@@ -2,9 +2,9 @@ package puregero.multipaper.server.velocity.migration.strategy;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.Optional;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
@@ -20,6 +20,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
     private static final String DEFAULT_UNIT_TIME = "SECONDS";
     private static final double DEFAULT_PLAYERS_TRANSFER = 0.2;
     private static final int DEFAULT_MIN_SERVERS_MIG = 5;
+    private static final int DEFAULT_MAX_PLAYERS_TO_MOVE = 5;
 
     private int msptHigh;
     private int minServers;
@@ -117,7 +118,8 @@ public class BalancePlayersStrategy extends BaseStrategy {
         // playersToMove can be negative = worst server has less players than ideal number
         long playersToMove = Math.abs(worst.getPlayers() - idealPlayersPerServer);
         long maxPlayersToMove = Math.abs(Math.round(idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER) - best.getPlayers()));
-        playersToMove = Math.min(playersToMove, maxPlayersToMove);
+        // Too much players being moved can lead to connection issues
+        playersToMove = Math.min(Math.min(playersToMove, maxPlayersToMove), DEFAULT_MAX_PLAYERS_TO_MOVE);
 
         if (playersToMove == 0) {
             logger.info("Not moving players now");
