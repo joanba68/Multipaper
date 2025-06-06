@@ -85,7 +85,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
         logger.info("Ideal number of players per server is {}", idealPlayersPerServer);
 
         Optional<ServerWithData> bestServer = serversWD.stream()
-                .filter(s -> !s.getPerf() && s.getPlayers() <= idealPlayersPerServer * DEFAULT_PLAYERS_TRANSFER)
+                .filter(s -> !s.getPerf() && s.getPlayers() <= idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER))
                 .min(Comparator.comparingDouble(s -> s.getMspt()));
         
         if (!bestServer.isPresent()) {
@@ -95,7 +95,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
         
         // Identificar servidor amb perf degradada i mes jugadors
         Optional<ServerWithData> worstServer = serversWD.stream()
-                .filter(server -> !server.getPerf())
+                .filter(server -> server.getPerf())
                 .max(Comparator.comparingInt(server -> server.getPlayers()));
 
         if (!worstServer.isPresent()) {
@@ -117,6 +117,13 @@ public class BalancePlayersStrategy extends BaseStrategy {
         long playersToMove = worst.getPlayers() - idealPlayersPerServer;
         long maxPlayersToMove = Math.round(idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER) - best.getPlayers());
         playersToMove = Math.min(playersToMove, maxPlayersToMove);
+
+        if (playersToMove == 0) {
+            logger.info("Not moving players now");
+            return;
+        }
+
+        logger.info("Trying to move {} players...", playersToMove);
 
         if (playersToMove > 0) {            
             worst.getServer().getPlayersConnected().stream()

@@ -15,9 +15,8 @@ port = 8080
 strategy = "default"
 
 [scaling]
-enabled = true
-#strategy = "none" # none means no scaling
-strategy = "tick_length_v3"
+strategy = "none" # none means no scaling
+#strategy = "tick_length_v3"
 scaleUpRatio = 0.3
 interval = 30
 minServers = 2
