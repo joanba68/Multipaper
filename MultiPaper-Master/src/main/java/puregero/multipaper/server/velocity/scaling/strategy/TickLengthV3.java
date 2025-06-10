@@ -108,7 +108,8 @@ public class TickLengthV3 extends BaseStrategy {
                 ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis() >= msptHigh,
                 server,
                 server.getPlayersConnected().size(),
-                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis()))
+                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis(),
+                ServerConnection.getConnection(server.getServerInfo().getName()).getOwnedChunks()))
             .collect(Collectors.toList());
 
         Map<Boolean, List<ServerWithData>> partitionedServers = serversWD

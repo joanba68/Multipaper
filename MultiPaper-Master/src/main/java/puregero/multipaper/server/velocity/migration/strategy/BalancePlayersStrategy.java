@@ -24,6 +24,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
 
     private int msptHigh;
     private int minServers;
+    private int maxPlayers;
 
     public BalancePlayersStrategy(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
@@ -36,6 +37,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
         this.interval = config.getLong("migration.interval", DEFAULT_INTERVAL);
         this.timeUnit = TimeUnit.valueOf(config.getString("migration.units", DEFAULT_UNIT_TIME));
         this.minServers  = Math.toIntExact(config.getLong("migration.minServers", (long) DEFAULT_MIN_SERVERS_MIG));
+        this.maxPlayers  = Math.toIntExact(config.getLong("migration.maxPlayers", (long) DEFAULT_MAX_PLAYERS_TO_MOVE));
 
     }
 
@@ -63,7 +65,8 @@ public class BalancePlayersStrategy extends BaseStrategy {
                 ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis() >= msptHigh,
                 server,
                 server.getPlayersConnected().size(),
-                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis()))
+                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis(),
+                ServerConnection.getConnection(server.getServerInfo().getName()).getOwnedChunks()))
             .collect(Collectors.toList());
 
         for (ServerWithData serverX : serversWD){
@@ -119,7 +122,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
         long playersToMove = Math.abs(worst.getPlayers() - idealPlayersPerServer);
         long maxPlayersToMove = Math.abs(Math.round(idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER) - best.getPlayers()));
         // Too much players being moved can lead to connection issues
-        playersToMove = Math.min(Math.min(playersToMove, maxPlayersToMove), DEFAULT_MAX_PLAYERS_TO_MOVE);
+        playersToMove = Math.min(Math.min(playersToMove, maxPlayersToMove), maxPlayers);
 
         if (playersToMove == 0) {
             logger.info("Not moving players now");
@@ -131,7 +134,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
         if (playersToMove > 0) {            
             worst.getServer().getPlayersConnected().stream()
                 .limit(playersToMove)
-                .forEach(player -> plugin.transferPlayer(player, best.getServer(), 5));
+                .forEach(player -> plugin.transferPlayer(player, best.getServer(), 3));
             logger.info("Transferring {} players to another server", playersToMove); 
         } else {
             logger.info("Not possible to transfer players to {}", best.getServer().getServerInfo().getName());

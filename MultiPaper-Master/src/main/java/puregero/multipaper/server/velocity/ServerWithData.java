@@ -8,12 +8,14 @@ public class ServerWithData {
     protected RegisteredServer server;
     protected int players;
     protected double mspt;
+    private long ownedChunks;
 
-    public ServerWithData(Boolean perf, RegisteredServer server, int players, double time){
+    public ServerWithData(Boolean perf, RegisteredServer server, int players, double time, long chunks){
         this.degPerf = perf;
         this.server = server;
         this.players = players;
         this.mspt = time;
+        this.ownedChunks = chunks;
     }
 
     public Boolean getPerf() {
@@ -29,6 +31,10 @@ public class ServerWithData {
     }
 
     public double getMspt() {
+        return mspt;
+    }
+
+    public double getChunks() {
         return mspt;
     }
 }
