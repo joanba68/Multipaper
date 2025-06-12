@@ -124,6 +124,7 @@ public class BalancePlayersStrategy extends BaseStrategy {
         long maxPlayersToMove = Math.abs(Math.round(idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER) - best.getPlayers()));
         // Too much players being moved can lead to connection issues
         if (playersToMove == 0) playersToMove = Long.MAX_VALUE;
+        if (maxPlayersToMove == 0) maxPlayersToMove = Long.MAX_VALUE;
         playersToMove = Math.min(Math.min(playersToMove, maxPlayersToMove), maxPlayers);
 
         logger.info("Trying to move {} players...", playersToMove);

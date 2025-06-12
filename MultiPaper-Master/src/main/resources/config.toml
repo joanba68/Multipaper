@@ -32,6 +32,6 @@ high = 41
 strategy = "balance_players_strategy"
 interval = 20
 minServers = 1
-maxPlayers = 5
+maxPlayers = 10
 
 
