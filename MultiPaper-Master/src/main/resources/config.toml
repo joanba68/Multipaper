@@ -15,12 +15,12 @@ port = 8080
 strategy = "default"
 
 [scaling]
-strategy = "none" # none means no scaling
-#strategy = "tick_length_v3"
+#strategy = "none" # none means no scaling
+strategy = "tick_length_v3"
 scaleUpRatio = 0.3
 interval = 30
 minServers = 2
-maxServers = 15
+maxServers = 10
 
 [scaling.tick_length]
 low = 11
@@ -29,9 +29,12 @@ high = 41
 [migration]
 #strategy = "none" # none means no migration
 #strategy = "easy_strategy"
-strategy = "balance_players_strategy"
+#strategy = "balance_players_strategy"
+strategy = "balance_players_strategyv2"
 interval = 20
 minServers = 1
 maxPlayers = 10
+timeW = 4.5
+playerW = 1.5
 
 
