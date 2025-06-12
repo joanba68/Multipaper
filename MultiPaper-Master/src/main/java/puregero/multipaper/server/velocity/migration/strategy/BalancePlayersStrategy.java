@@ -119,15 +119,12 @@ public class BalancePlayersStrategy extends BaseStrategy {
         }
         
         // playersToMove can be negative = worst server has less players than ideal number
+        // playersToMove can be zero but still very degraded, so tick time should drive the migration
         long playersToMove = Math.abs(worst.getPlayers() - idealPlayersPerServer);
         long maxPlayersToMove = Math.abs(Math.round(idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER) - best.getPlayers()));
         // Too much players being moved can lead to connection issues
+        if (playersToMove == 0) playersToMove = Long.MAX_VALUE;
         playersToMove = Math.min(Math.min(playersToMove, maxPlayersToMove), maxPlayers);
-
-        if (playersToMove == 0) {
-            logger.info("Not moving players now");
-            return;
-        }
 
         logger.info("Trying to move {} players...", playersToMove);
 
