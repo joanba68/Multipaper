@@ -41,8 +41,8 @@ public class BalancePlayersStrategyv2 extends BaseStrategy {
         this.timeUnit = TimeUnit.valueOf(config.getString("migration.units", DEFAULT_UNIT_TIME));
         this.minServers  = Math.toIntExact(config.getLong("migration.minServers", (long) DEFAULT_MIN_SERVERS_MIG));
         this.maxPlayers  = Math.toIntExact(config.getLong("migration.maxPlayers", (long) DEFAULT_MAX_PLAYERS_TO_MOVE));
-        this.timeW   = config.getDouble("migration.timeW", 5.0);
-        this.playerW = config.getDouble("migration.playerW", 1.0);
+        this.timeW   = config.getDouble("defaults.timeW", 5.0);
+        this.playerW = config.getDouble("defaults.playerW", 1.0);
     }
 
     @Override
