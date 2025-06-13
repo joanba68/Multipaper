@@ -158,6 +158,7 @@ public class TickLengthV4 extends BaseStrategy {
                 logger.info("Scaling up 1 server now there are {} servers...", count);
                 scalingUp = true;
                 plugin.getScalingManager().scaleUp();
+                return;
             }
         }
 
@@ -168,14 +169,11 @@ public class TickLengthV4 extends BaseStrategy {
         }
 
         // if all servers are below the threshold, scale down
-        boolean scaleDown = allServers
-                .stream()
-                .map(server -> ServerConnection
-                        .getConnection(server.getServerInfo().getName())
-                        .getTimer()
-                        .averageInMillis() < msptLow)
-                .reduce(Boolean::logicalAnd)
-                .orElse(false);
+        boolean scaleDown = serversWD
+            .stream()
+            .map(server -> server.getQuality() < qualityT)
+            .reduce(Boolean::logicalAnd)
+            .orElse(false);
 
         // delete the server with the lowest amount of players
         if (scaleDown) {
