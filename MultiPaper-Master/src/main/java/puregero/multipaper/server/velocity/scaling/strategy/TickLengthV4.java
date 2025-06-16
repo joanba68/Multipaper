@@ -123,7 +123,7 @@ public class TickLengthV4 extends BaseStrategy {
                 serverX.getServer().getServerInfo().getName(), 
                 serverX.getPlayers(), 
                 Math.round(mspt),
-                serverX.getChunks(),
+                Math.round(serverX.getChunks()),
                 serverX.getPerf(),
                 Math.round(quality));
         }
@@ -169,9 +169,10 @@ public class TickLengthV4 extends BaseStrategy {
         }
 
         // if all servers are below the threshold, scale down
+        // need some kind of hysteresis here...
         boolean scaleDown = serversWD
             .stream()
-            .map(server -> server.getQuality() < qualityT)
+            .map(server -> server.getQuality() < qualityT * scaleDownRatio)
             .reduce(Boolean::logicalAnd)
             .orElse(false);
 

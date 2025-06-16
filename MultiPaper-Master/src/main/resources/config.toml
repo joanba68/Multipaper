@@ -17,7 +17,8 @@ strategy = "default"
 [scaling]
 #strategy = "none" # none means no scaling
 strategy = "tick_length_v4"
-scaleUpRatio = 0.3
+scaleUpRatio = 0.2
+scaleDownRatio = 0.2
 interval = 30
 minServers = 2
 maxServers = 10
