@@ -164,7 +164,7 @@ public class TickLengthV4 extends BaseStrategy {
 
         // don't scale down if there is only a minimal number of servers
         if(allServers.size() < minServers) {
-            logger.info("Now {} active servers, {} at least for scale down !!", allServers.size(), minServers);
+            logger.info("Now {} active servers, at {} least for scale down !!", allServers.size(), minServers);
             return;
         }
 
@@ -190,6 +190,8 @@ public class TickLengthV4 extends BaseStrategy {
                     .ifPresent(server -> {
                         plugin.getScalingManager().deletePod(server.getServerInfo().getName());
                     });
+        } else {
+            logger.info("No scale down needed");
         }
     }
 }
