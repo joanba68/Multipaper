@@ -165,7 +165,10 @@ public class TickLengthV3 extends BaseStrategy {
         if (scaleDown) {
             int serversDown = (int) Math.round((double) scaleDownRatio * (long) allServers.size());
             logger.info("Scaling down {} servers", serversDown);
-            logger.info("Now {} active servers, {} at least for scale down !!", allServers.size(), minServers);
+            logger.info("Now {} active servers, at least {} for scale down !!", allServers.size(), minServers);
+
+            // when there are 2 servers, scaling down cannot occur
+            if (serversDown == 0) serversDown = 1;
 
             scalingDown = true;
             allServers

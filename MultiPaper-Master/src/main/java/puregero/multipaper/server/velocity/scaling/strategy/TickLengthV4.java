@@ -164,7 +164,7 @@ public class TickLengthV4 extends BaseStrategy {
 
         // don't scale down if there is only a minimal number of servers
         if(allServers.size() < minServers) {
-            logger.info("Now {} active servers, at {} least for scale down !!", allServers.size(), minServers);
+            logger.info("Now {} active servers, at least {} for scale down !!", allServers.size(), minServers);
             return;
         }
 
@@ -172,7 +172,7 @@ public class TickLengthV4 extends BaseStrategy {
         // need some kind of hysteresis here...
         boolean scaleDown = serversWD
             .stream()
-            .map(server -> server.getQuality() < qualityT * scaleDownRatio)
+            .map(server -> server.getQuality() < qualityT * (1 - scaleDownRatio))
             .reduce(Boolean::logicalAnd)
             .orElse(false);
 
@@ -180,7 +180,10 @@ public class TickLengthV4 extends BaseStrategy {
         if (scaleDown) {
             int serversDown = (int) Math.round((double) scaleDownRatio * (long) allServers.size());
             logger.info("Scaling down {} servers", serversDown);
-            logger.info("Now {} active servers, {} at least for scale down !!", allServers.size(), minServers);
+            logger.info("Now {} active servers, at least {} for scale down !!", allServers.size(), minServers);
+
+            // when there are 2 servers, scaling down cannot occur
+            if (serversDown == 0) serversDown = 1;
 
             scalingDown = true;
             allServers
