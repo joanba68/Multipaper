@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
@@ -13,6 +14,8 @@ import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
 import puregero.multipaper.server.velocity.MultiPaperVelocity;
 import puregero.multipaper.server.velocity.ServerWithData;
+import puregero.multipaper.server.velocity.metric.MetricReporter;
+import puregero.multipaper.server.velocity.metric.Metrics;
 
 public class TickLengthV4 extends BaseStrategy {
 
@@ -41,6 +44,8 @@ public class TickLengthV4 extends BaseStrategy {
     private int maxServers;
     private double timeW;
     private double playerW;
+
+    private Collection<Metrics> metrics;
 
     public TickLengthV4(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
@@ -92,7 +97,16 @@ public class TickLengthV4 extends BaseStrategy {
         long redServers;
         long scaleUpServers;
 
-        // Obtenir tots els servidors i filtrar els actius
+        MetricReporter metrics = plugin.getMetricReporter();
+
+        double qualityT = metrics.getQualityT();
+
+        if (metrics.getMetrics() == null) {
+            logger.info("Waiting for servers before starting scaling strategy");
+            return;
+        }
+                      
+        // // Obtenir tots els servidors i filtrar els actius
         Collection<RegisteredServer> allServers = plugin
                 .getProxy()
                 .getAllServers();
@@ -103,30 +117,40 @@ public class TickLengthV4 extends BaseStrategy {
             return;
         }
 
-        double qualityT = msptHigh * this.timeW + DEFAULT_IDEAL_PLAYERS * this.playerW;
+        Map<String, Metrics> metricsMap = metrics.getMetrics().stream()
+            .collect(Collectors.toMap(Metrics::getName, Function.identity()));
 
         Collection<ServerWithData> serversWD = allServers
             .stream()
-            .map(server -> new ServerWithData(
-                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis() * this.timeW + server.getPlayersConnected().size() * this.playerW >= qualityT,
-                server,
-                server.getPlayersConnected().size(),
-                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis(),
-                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis() * this.timeW + server.getPlayersConnected().size() * this.playerW,
-                ServerConnection.getConnection(server.getServerInfo().getName()).getOwnedChunks()))
+            .map(server -> {
+                String serverName = server.getServerInfo().getName();
+                Metrics wmetrics = metricsMap.get(serverName);
+                if (wmetrics == null) {
+                    logger.warn("No s'han trobat mètriques per al servidor: {}", serverName);
+                    return null;
+                }
+                return new ServerWithData(
+                    wmetrics.getQuality() >= qualityT, // Comparar qualitat amb el llindar
+                    server,
+                    wmetrics.getPlayers(),
+                    wmetrics.getMspt(),
+                    wmetrics.getQuality(),
+                    wmetrics.getChunks()
+                );
+            })
             .collect(Collectors.toList());
 
-        for (ServerWithData serverX : serversWD){
-            double mspt = ServerConnection.getConnection(serverX.getServer().getServerInfo().getName()).getTimer().averageInMillis();
-            double quality = ServerConnection.getConnection(serverX.getServer().getServerInfo().getName()).getTimer().averageInMillis() * this.timeW + serverX.getPlayers() * this.playerW;
-            logger.info("Server {} has {} players and {} mspt, {} owned chunks, degraded performance is {}, quality is {}", 
-                serverX.getServer().getServerInfo().getName(), 
-                serverX.getPlayers(), 
-                Math.round(mspt),
-                Math.round(serverX.getChunks()),
-                serverX.getPerf(),
-                Math.round(quality));
-        }
+        // for (ServerWithData serverX : serversWD){
+        //     double mspt = ServerConnection.getConnection(serverX.getServer().getServerInfo().getName()).getTimer().averageInMillis();
+        //     double quality = ServerConnection.getConnection(serverX.getServer().getServerInfo().getName()).getTimer().averageInMillis() * this.timeW + serverX.getPlayers() * this.playerW;
+        //     logger.info("{} {} P {} mspt, {} OWNC {} Q, degraded perf. {}", 
+        //         serverX.getServer().getServerInfo().getName(), 
+        //         serverX.getPlayers(), 
+        //         Math.round(mspt),
+        //         Math.round(serverX.getChunks()),
+        //         Math.round(quality),
+        //         serverX.getPerf());
+        // }
 
         Map<Boolean, List<ServerWithData>> partitionedServers = serversWD
             .stream()

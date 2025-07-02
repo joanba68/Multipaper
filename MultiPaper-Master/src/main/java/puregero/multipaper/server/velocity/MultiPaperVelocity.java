@@ -1,10 +1,20 @@
 package puregero.multipaper.server.velocity;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.command.CommandManager;
-import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
@@ -18,7 +28,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import org.slf4j.Logger;
+
 import puregero.multipaper.server.CircularTimer;
 import puregero.multipaper.server.MultiPaperServer;
 import puregero.multipaper.server.ServerConnection;
@@ -26,15 +36,7 @@ import puregero.multipaper.server.velocity.drain.DrainServer;
 import puregero.multipaper.server.velocity.drain.strategy.DrainStrategy;
 import puregero.multipaper.server.velocity.scaling.ScalingManager;
 import puregero.multipaper.server.velocity.serverselection.strategy.ServerSelectionStrategy;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.net.InetSocketAddress;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
+import puregero.multipaper.server.velocity.metric.MetricReporter;
 
 @Plugin(id = "multipaper-velocity",
     name = "MultiPaper Velocity",
@@ -51,6 +53,7 @@ public class MultiPaperVelocity {
 
     private DrainStrategy drainStrategy;
     private ServerSelectionStrategy serverSelectionStrategy;
+    private MetricReporter metricReporter;
 
     private final StrategyManager strategyManager;
     private final ScalingManager scalingManager;
@@ -59,6 +62,7 @@ public class MultiPaperVelocity {
 
     private final static int DEFAULT_SCALING_INTERVAL = 60;
     private final static int DEFAULT_MIGRATION_INTERVAL = 60;
+    private final static int DEFAULT_REPORTING_INTERVAL = 15;
 
     @Inject
     public MultiPaperVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataFolder) {
@@ -133,8 +137,17 @@ public class MultiPaperVelocity {
                 TimeUnit.SECONDS
         );
 
+        metricReporter = strategyManager.loadStrategy(
+                "metric.",
+                config.getString("metric.strategy", "none"),
+                MetricReporter.class,
+                config.getLong("metric.interval", (long) DEFAULT_REPORTING_INTERVAL),
+                TimeUnit.SECONDS
+        );
+
         strategyManager.addStrategy("scaling", scalingStrategy);
         strategyManager.addStrategy("migration", migrationStrategy);
+        strategyManager.addStrategy("metric", metricReporter);
 
         strategyManager.onStartup(this);
 
@@ -217,6 +230,19 @@ public class MultiPaperVelocity {
                 migrationStrategy.onStartup(this);
                 strategyManager.addStrategy("migration", migrationStrategy);
                 logger.info("Migration strategy set to {}", name);
+            }
+            case "metric" -> {
+                strategyManager.removeStrategy("metric");
+                metricReporter = strategyManager.loadStrategy(
+                        "metric.",
+                        name,
+                        MetricReporter.class,
+                        config.getLong("metric.interval", (long) DEFAULT_MIGRATION_INTERVAL),
+                        TimeUnit.SECONDS
+                );
+                metricReporter.onStartup(this);
+                strategyManager.addStrategy("metric", metricReporter);
+                logger.info("Metric strategy set to {}", name);
             }
             default -> logger.warn("Unknown strategy type: {}", behaviour);
         }
@@ -370,6 +396,10 @@ public class MultiPaperVelocity {
 
     public StrategyManager getStrategyManager() {
         return strategyManager;
+    }
+
+    public MetricReporter getMetricReporter() {
+        return metricReporter;
     }
 
     public boolean executeDrainStrategy(String serverName) {

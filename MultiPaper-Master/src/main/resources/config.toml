@@ -36,6 +36,10 @@ interval = 20
 minServers = 1
 maxPlayers = 10
 
+[metric]
+strategy = "metric_reporter"
+interval = 10
+
 [defaults]
 timeW = 4.5
 playerW = 1.5

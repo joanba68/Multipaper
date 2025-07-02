@@ -2,8 +2,10 @@ package puregero.multipaper.server.velocity.migration.strategy;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -12,6 +14,8 @@ import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
 import puregero.multipaper.server.velocity.MultiPaperVelocity;
 import puregero.multipaper.server.velocity.ServerWithData;
+import puregero.multipaper.server.velocity.metric.MetricReporter;
+import puregero.multipaper.server.velocity.metric.Metrics;
 
 public class BalancePlayersStrategyv2 extends BaseStrategy {
 
@@ -28,6 +32,7 @@ public class BalancePlayersStrategyv2 extends BaseStrategy {
     private int maxPlayers;
     private double timeW;
     private double playerW;
+    private Collection<Metrics> metrics;
 
     public BalancePlayersStrategyv2(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
@@ -48,6 +53,10 @@ public class BalancePlayersStrategyv2 extends BaseStrategy {
     @Override
     public void executeStrategy() {
 
+        MetricReporter metrics = plugin.getMetricReporter();
+
+        double qualityT = metrics.getQualityT();
+
         Collection<RegisteredServer> allServers = plugin
                 .getProxy()
                 .getAllServers();
@@ -63,30 +72,28 @@ public class BalancePlayersStrategyv2 extends BaseStrategy {
             //return;
         }
 
-        double qualityT = msptHigh * this.timeW + DEFAULT_IDEAL_PLAYERS * this.playerW;
-        logger.info("Quality threshold is {}", Math.round(qualityT));
+        Map<String, Metrics> metricsMap = metrics.getMetrics().stream()
+            .collect(Collectors.toMap(Metrics::getName, Function.identity()));
 
         Collection<ServerWithData> serversWD = allServers
             .stream()
-            .map(server -> new ServerWithData(
-                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis() * this.timeW + server.getPlayersConnected().size() * this.playerW >= qualityT,
-                server,
-                server.getPlayersConnected().size(),
-                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis(),
-                ServerConnection.getConnection(server.getServerInfo().getName()).getTimer().averageInMillis() * this.timeW + server.getPlayersConnected().size() * this.playerW,
-                ServerConnection.getConnection(server.getServerInfo().getName()).getOwnedChunks()))
+            .map(server -> {
+                String serverName = server.getServerInfo().getName();
+                Metrics wmetrics = metricsMap.get(serverName);
+                if (wmetrics == null) {
+                    logger.warn("No s'han trobat mètriques per al servidor: {}", serverName);
+                    return null;
+                }
+                return new ServerWithData(
+                    wmetrics.getQuality() >= qualityT, // Comparar qualitat amb el llindar
+                    server,
+                    wmetrics.getPlayers(),
+                    wmetrics.getMspt(),
+                    wmetrics.getQuality(),
+                    wmetrics.getChunks()
+                );
+            })
             .collect(Collectors.toList());
-
-        for (ServerWithData serverX : serversWD){
-            double mspt = ServerConnection.getConnection(serverX.getServer().getServerInfo().getName()).getTimer().averageInMillis();
-            double quality = ServerConnection.getConnection(serverX.getServer().getServerInfo().getName()).getTimer().averageInMillis() * this.timeW + serverX.getPlayers() * this.playerW;
-            logger.info("Server {} has {} players and {} mspt, degraded performance is {}, quality is {}", 
-                serverX.getServer().getServerInfo().getName(), 
-                serverX.getPlayers(), 
-                Math.round(mspt),
-                serverX.getPerf(),
-                Math.round(quality));
-        }
 
         // Calcular el nombre total de jugadors i l'ideal per servidor
         int totalPlayers = serversWD.stream().mapToInt(s -> s.getPlayers()).sum();

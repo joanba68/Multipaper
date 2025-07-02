@@ -49,7 +49,7 @@ public class ServerWithData {
         return quality;
     }
 
-    public double getChunks() {
-        return mspt;
+    public long getChunks() {
+        return ownedChunks;
     }
 }
