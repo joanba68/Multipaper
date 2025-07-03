@@ -1,11 +1,15 @@
 package puregero.multipaper.server.velocity.metric;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
+import io.prometheus.metrics.core.metrics.Gauge;
+import io.prometheus.metrics.exporter.httpserver.HTTPServer;
+import io.prometheus.metrics.instrumentation.jvm.JvmMetrics;
 import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
 import puregero.multipaper.server.velocity.MultiPaperVelocity;
@@ -24,6 +28,10 @@ public class MetricReporter extends BaseStrategy {
     private double qualityT;
 
     private Collection<Metrics> metrics;
+    private Gauge serverQualityGauge;
+    private Gauge serverMSPTGauge;
+    private Gauge serverPlayersGauge;
+    private Gauge serverChunksGauge;
 
     public MetricReporter(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
@@ -47,13 +55,49 @@ public class MetricReporter extends BaseStrategy {
         this.qualityT = msptHigh * this.timeW + DEFAULT_IDEAL_PLAYERS * this.playerW;
 
         logger.info("Threshold for degraded performance > {}", Math.round(qualityT));
+
+        JvmMetrics.builder().register();
+
+        serverQualityGauge = Gauge.builder()
+            .name("velocity_server_quality")
+            .help("Quality metric for each server based on MSPT and player count")
+            .labelNames("server_name")
+            .register();
+
+        serverMSPTGauge = Gauge.builder()
+            .name("velocity_server_mspt")
+            .help("MSPT metric for each server")
+            .labelNames("server_name")
+            .register();
+
+        serverPlayersGauge = Gauge.builder()
+            .name("velocity_server_players")
+            .help("Players count for each server")
+            .labelNames("server_name")
+            .register();
+
+        serverChunksGauge = Gauge.builder()
+            .name("velocity_server_chunks")
+            .help("Owned chunks count for each server")
+            .labelNames("server_name")
+            .register();
+
+        try {
+            HTTPServer server = HTTPServer.builder()
+                    .port(9400)
+                    .buildAndStart();
+            logger.info("HTTPServer listening on port http://localhost:{}/metrics", server.getPort());
+        } catch (IOException e) {
+            logger.error("Failed to start Prometheus HTTP server: {}", e.getMessage());
+        }
+
     }
 
     @Override
     public void executeStrategy() {
         //logger.info(sep);
 
-                // Obtenir tots els servidors i filtrar els actius
+        // Obtenir tots els servidors i filtrar els actius
         Collection<RegisteredServer> allServers = plugin
                 .getProxy()
                 .getAllServers();
@@ -87,6 +131,10 @@ public class MetricReporter extends BaseStrategy {
             .collect(Collectors.toList());
 
         for (Metrics wmetrics: metrics){
+            serverQualityGauge.labelValues(wmetrics.getName()).set(wmetrics.getQuality());
+            serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
+            serverPlayersGauge.labelValues(wmetrics.getName()).set(wmetrics.getPlayers());
+            serverChunksGauge.labelValues(wmetrics.getName()).set(wmetrics.getChunks());
             logger.info("{} {} mspt {} Q {} QT {} P {} OWNC. degraded perf. is {}",
             wmetrics.getName(),
             Math.round(wmetrics.getMspt()),

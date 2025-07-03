@@ -38,7 +38,7 @@ maxPlayers = 10
 
 [metric]
 strategy = "metric_reporter"
-interval = 10
+interval = 5
 
 [defaults]
 timeW = 4.5

@@ -82,7 +82,14 @@ public class BalancePlayersStrategyv2 extends BaseStrategy {
                 Metrics wmetrics = metricsMap.get(serverName);
                 if (wmetrics == null) {
                     logger.warn("No s'han trobat mètriques per al servidor: {}", serverName);
-                    return null;
+                    new ServerWithData(
+                        false, // Comparar qualitat amb el llindar
+                        server,
+                        0,
+                        0,
+                        0,
+                        0
+                    );
                 }
                 return new ServerWithData(
                     wmetrics.getQuality() >= qualityT, // Comparar qualitat amb el llindar
