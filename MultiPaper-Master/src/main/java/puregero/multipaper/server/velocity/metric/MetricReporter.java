@@ -35,6 +35,7 @@ public class MetricReporter extends BaseStrategy {
     private Gauge serverPlayersGauge;
     private Gauge serverChunksGauge;
     private Set<String> previousServers = new HashSet<>();
+    private Set<String> toRemoveServers = new HashSet<>();
 
     public MetricReporter(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
@@ -105,16 +106,26 @@ public class MetricReporter extends BaseStrategy {
                 .getProxy()
                 .getAllServers();
 
+        // First time we don't see a serve we put metrics to zero, but next run will remove the gauge
+        for (String serverName : toRemoveServers) {
+            serverQualityGauge.remove(serverName);
+            serverMSPTGauge.remove(serverName);
+            serverPlayersGauge.remove(serverName);
+            serverChunksGauge.remove(serverName);
+        }
+        toRemoveServers.clear();
+
         // at startup time there are no registered servers...
         if (allServers.size() == 0) {
             logger.info("Waiting for servers before repoprting metrics");
             //logger.info(sep);
             if (previousServers.size() != 0) {
                 for (String serverName : previousServers) {
-                    serverQualityGauge.remove(serverName);
-                    serverMSPTGauge.remove(serverName);
-                    serverPlayersGauge.remove(serverName);
-                    serverChunksGauge.remove(serverName);
+                    serverQualityGauge.labelValues(serverName).set(0);
+                    serverMSPTGauge.labelValues(serverName).set(0);
+                    serverPlayersGauge.labelValues(serverName).set(0);
+                    serverChunksGauge.labelValues(serverName).set(0);
+                    toRemoveServers.add(serverName);
                 }
                 previousServers.clear();
             }   
@@ -129,10 +140,11 @@ public class MetricReporter extends BaseStrategy {
         for (String serverName : previousServers) {
             if (!currentServers.contains(serverName)) {
                 logger.info("Removing metrics for deleted server: {}", serverName);
-                serverQualityGauge.remove(serverName);
-                serverMSPTGauge.remove(serverName);
-                serverPlayersGauge.remove(serverName);
-                serverChunksGauge.remove(serverName);
+                serverQualityGauge.labelValues(serverName).set(0);
+                serverMSPTGauge.labelValues(serverName).set(0);
+                serverPlayersGauge.labelValues(serverName).set(0);
+                serverChunksGauge.labelValues(serverName).set(0);
+                toRemoveServers.add(serverName);
             }
         }
 
