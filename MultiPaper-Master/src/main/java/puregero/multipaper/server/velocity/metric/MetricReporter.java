@@ -2,6 +2,8 @@ package puregero.multipaper.server.velocity.metric;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,7 @@ public class MetricReporter extends BaseStrategy {
     private Gauge serverMSPTGauge;
     private Gauge serverPlayersGauge;
     private Gauge serverChunksGauge;
+    private Set<String> previousServers = new HashSet<>();
 
     public MetricReporter(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
@@ -106,8 +109,36 @@ public class MetricReporter extends BaseStrategy {
         if (allServers.size() == 0) {
             logger.info("Waiting for servers before repoprting metrics");
             //logger.info(sep);
+            if (previousServers.size() != 0) {
+                for (String serverName : previousServers) {
+                    serverQualityGauge.remove(serverName);
+                    serverMSPTGauge.remove(serverName);
+                    serverPlayersGauge.remove(serverName);
+                    serverChunksGauge.remove(serverName);
+                }
+                previousServers.clear();
+            }   
             return;
         }
+
+        Set<String> currentServers = allServers.stream()
+            .map(server -> server.getServerInfo().getName())
+            .collect(Collectors.toSet());
+
+        // Eliminar mètriques dels servidors que ja no existeixen
+        for (String serverName : previousServers) {
+            if (!currentServers.contains(serverName)) {
+                logger.info("Removing metrics for deleted server: {}", serverName);
+                serverQualityGauge.remove(serverName);
+                serverMSPTGauge.remove(serverName);
+                serverPlayersGauge.remove(serverName);
+                serverChunksGauge.remove(serverName);
+            }
+        }
+
+        // Actualitzar la llista de servidors anteriors
+        previousServers.clear();
+        previousServers.addAll(currentServers);
 
         Collection<ServerWithData> serversWD = allServers
             .stream()
