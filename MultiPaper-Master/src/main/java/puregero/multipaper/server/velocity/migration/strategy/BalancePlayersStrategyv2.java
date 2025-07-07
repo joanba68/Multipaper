@@ -32,7 +32,8 @@ public class BalancePlayersStrategyv2 extends BaseStrategy {
     private int maxPlayers;
     private double timeW;
     private double playerW;
-    private Collection<Metrics> metrics;
+
+    private MetricReporter metrics;
 
     public BalancePlayersStrategyv2(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
@@ -53,7 +54,7 @@ public class BalancePlayersStrategyv2 extends BaseStrategy {
     @Override
     public void executeStrategy() {
 
-        MetricReporter metrics = plugin.getMetricReporter();
+        metrics = plugin.getMetricReporter();
 
         double qualityT = metrics.getQualityT();
 

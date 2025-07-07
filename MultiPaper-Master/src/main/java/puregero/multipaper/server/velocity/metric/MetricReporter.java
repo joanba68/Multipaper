@@ -106,7 +106,11 @@ public class MetricReporter extends BaseStrategy {
                 .getProxy()
                 .getAllServers();
 
-        // First time we don't see a serve we put metrics to zero, but next run will remove the gauge
+        // Prometheus i grafana veuen el darrer valor si un server s'ha eliminat però no s'han
+        // eliminat els gauges, per tant mostren línies planes per servers que ja no hi son
+        // Primer es posa a zero el darrer valor i a la següent crida s'elimina el gauge
+
+        // Si el servidor s'ha posat a zero, ha d'estar a la llista per eliminar els gauges
         for (String serverName : toRemoveServers) {
             serverQualityGauge.remove(serverName);
             serverMSPTGauge.remove(serverName);
@@ -119,17 +123,6 @@ public class MetricReporter extends BaseStrategy {
         // at startup time there are no registered servers...
         if (allServers.size() == 0) {
             logger.info("Waiting for servers before repoprting metrics");
-            //logger.info(sep);
-            if (previousServers.size() != 0) {
-                for (String serverName : previousServers) {
-                    serverQualityGauge.labelValues(serverName).set(0);
-                    serverMSPTGauge.labelValues(serverName).set(0);
-                    serverPlayersGauge.labelValues(serverName).set(0);
-                    serverChunksGauge.labelValues(serverName).set(0);
-                    toRemoveServers.add(serverName);
-                }
-                previousServers.clear();
-            }   
             return;
         }
 

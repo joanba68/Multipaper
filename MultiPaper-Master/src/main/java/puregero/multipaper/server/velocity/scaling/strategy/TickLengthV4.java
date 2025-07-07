@@ -5,12 +5,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
-import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
 import puregero.multipaper.server.velocity.MultiPaperVelocity;
 import puregero.multipaper.server.velocity.ServerWithData;
@@ -45,7 +44,7 @@ public class TickLengthV4 extends BaseStrategy {
     private double timeW;
     private double playerW;
 
-    private Collection<Metrics> metrics;
+    private MetricReporter metrics;
 
     public TickLengthV4(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
@@ -97,7 +96,7 @@ public class TickLengthV4 extends BaseStrategy {
         long redServers;
         long scaleUpServers;
 
-        MetricReporter metrics = plugin.getMetricReporter();
+        metrics = plugin.getMetricReporter();
 
         double qualityT = metrics.getQualityT();
 
