@@ -112,6 +112,7 @@ public class MetricReporter extends BaseStrategy {
             serverMSPTGauge.remove(serverName);
             serverPlayersGauge.remove(serverName);
             serverChunksGauge.remove(serverName);
+            logger.info("Removed metric gauges for server: {}", serverName);
         }
         toRemoveServers.clear();
 
@@ -136,10 +137,10 @@ public class MetricReporter extends BaseStrategy {
             .map(server -> server.getServerInfo().getName())
             .collect(Collectors.toSet());
 
-        // Eliminar mètriques dels servidors que ja no existeixen
+        // Posar a zero mètriques dels servidors que ja no existeixen
         for (String serverName : previousServers) {
             if (!currentServers.contains(serverName)) {
-                logger.info("Removing metrics for deleted server: {}", serverName);
+                logger.info("Set to zero metrics for server: {}", serverName);
                 serverQualityGauge.labelValues(serverName).set(0);
                 serverMSPTGauge.labelValues(serverName).set(0);
                 serverPlayersGauge.labelValues(serverName).set(0);
