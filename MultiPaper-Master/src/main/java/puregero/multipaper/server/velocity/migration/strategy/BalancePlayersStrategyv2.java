@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
-import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
 import puregero.multipaper.server.velocity.MultiPaperVelocity;
 import puregero.multipaper.server.velocity.ServerWithData;
@@ -25,13 +24,10 @@ public class BalancePlayersStrategyv2 extends BaseStrategy {
     private static final double DEFAULT_PLAYERS_TRANSFER = 0.2;
     private static final int DEFAULT_MIN_SERVERS_MIG = 5;
     private static final int DEFAULT_MAX_PLAYERS_TO_MOVE = 5;
-    private static final int DEFAULT_IDEAL_PLAYERS = 40;
 
-    private int msptHigh;
     private int minServers;
     private int maxPlayers;
-    private double timeW;
-    private double playerW;
+
 
     private MetricReporter metrics;
 
@@ -42,13 +38,10 @@ public class BalancePlayersStrategyv2 extends BaseStrategy {
     @Override
     public void onStartup(MultiPaperVelocity plugin) {
         super.onStartup(plugin);
-        this.msptHigh = Math.toIntExact(config.getLong("scaling.tick_length.high", (long) DEFAULT_MSPT_HIGH));
         this.interval = config.getLong("migration.interval", DEFAULT_INTERVAL);
         this.timeUnit = TimeUnit.valueOf(config.getString("migration.units", DEFAULT_UNIT_TIME));
         this.minServers  = Math.toIntExact(config.getLong("migration.minServers", (long) DEFAULT_MIN_SERVERS_MIG));
         this.maxPlayers  = Math.toIntExact(config.getLong("migration.maxPlayers", (long) DEFAULT_MAX_PLAYERS_TO_MOVE));
-        this.timeW   = config.getDouble("defaults.timeW", 5.0);
-        this.playerW = config.getDouble("defaults.playerW", 1.0);
     }
 
     @Override
