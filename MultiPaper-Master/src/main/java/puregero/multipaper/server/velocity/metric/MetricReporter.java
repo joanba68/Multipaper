@@ -27,6 +27,7 @@ public class MetricReporter extends BaseStrategy {
     private int msptHigh;
     private double timeW;
     private double playerW;
+    private long idealPlayers;
     private double qualityT;
 
     private Collection<Metrics> metrics;
@@ -54,9 +55,10 @@ public class MetricReporter extends BaseStrategy {
         super.onStartup(plugin);
 
         this.msptHigh = Math.toIntExact(config.getLong("performance.tick_length.high", (long) DEFAULT_MSPT_HIGH));
-        this.timeW   = config.getDouble("defaults.timeW", 5.0);
-        this.playerW = config.getDouble("defaults.playerW", 1.0);
-        this.qualityT = msptHigh * this.timeW + DEFAULT_IDEAL_PLAYERS * this.playerW;
+        this.timeW   = config.getDouble("quality.timeW", 5.0);
+        this.playerW = config.getDouble("quality.playerW", 1.0);
+        this.idealPlayers = config.getLong("quality.idealPlayers", (long) DEFAULT_IDEAL_PLAYERS);
+        this.qualityT = msptHigh * this.timeW + idealPlayers * this.playerW;
 
         logger.info("Threshold for degraded performance > {}", Math.round(qualityT));
 

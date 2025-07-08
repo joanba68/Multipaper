@@ -23,9 +23,9 @@ interval = 30
 minServers = 2
 maxServers = 10
 
-[scaling.tick_length]
-low = 11
-high = 41
+[performance.tick_length]
+low = 10
+high = 40
 
 [migration]
 #strategy = "none" # none means no migration
@@ -40,8 +40,9 @@ maxPlayers = 10
 strategy = "metric_reporter"
 interval = 5
 
-[defaults]
+[quality]
 timeW = 4.5
 playerW = 1.5
+idealPlayers = 40
 
 
