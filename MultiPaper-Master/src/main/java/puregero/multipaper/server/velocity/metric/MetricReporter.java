@@ -21,12 +21,14 @@ public class MetricReporter extends BaseStrategy {
 
     private static final int DEFAULT_MSPT_HIGH = 40;
     private static final int DEFAULT_IDEAL_PLAYERS = 40;
-    
+    private static final int DEFAULT_CHUNKS_PLAYER = 256;
+
     //private static final String sep = "++++++++++++++++++++++++++++METRICS++++++++++++++++++++++++++++";
 
     private int msptHigh;
     private double timeW;
     private double playerW;
+    private long chunksxPlayer;
     private double chunksW;
     private long idealPlayers;
     private double qualityT;
@@ -58,11 +60,14 @@ public class MetricReporter extends BaseStrategy {
         this.msptHigh = Math.toIntExact(config.getLong("performance.tick_length.high", (long) DEFAULT_MSPT_HIGH));
         this.timeW   = config.getDouble("quality.timeW", 5.0);
         this.playerW = config.getDouble("quality.playerW", 1.0);
+        this.chunksxPlayer = config.getLong("quality.chunksxPlayer", (long) DEFAULT_CHUNKS_PLAYER);
         this.chunksW = config.getDouble("quality.chunksW", 2.0);
         this.idealPlayers = config.getLong("quality.idealPlayers", (long) DEFAULT_IDEAL_PLAYERS);
-        // Quality threshold basement: mspt and players
-        this.qualityT = msptHigh * this.timeW + idealPlayers * this.playerW;
-        //logger.info("Threshold for degraded performance > {}", Math.round(qualityT));
+        // Quality threshold basement: mspt, players
+        //this.qualityT = msptHigh * this.timeW + idealPlayers * this.playerW;
+        // Quality threshold basement: mspt, players
+        this.qualityT = msptHigh * timeW + idealPlayers * playerW + idealPlayers * chunksxPlayer * chunksW;
+        logger.info("Threshold for degraded performance > {}", Math.round(qualityT));
 
         logger.info("Read params {} {} {} {} {}", msptHigh, timeW, playerW, chunksW, idealPlayers);
 
@@ -163,13 +168,10 @@ public class MetricReporter extends BaseStrategy {
                 ServerConnection.getConnection(server.getServerInfo().getName()).getOwnedChunks()))
             .collect(Collectors.toList());
 
-        double avgChunks = serversWD.stream()
-            .mapToLong(ServerWithData::getChunks)
-            .average()
-            .orElse(0.0);
-        
-        qualityT = qualityT + chunksW * avgChunks;
-        //logger.info("Threshold for degraded performance > {}", Math.round(qualityT));
+        // double avgChunks = serversWD.stream()
+        //     .mapToLong(ServerWithData::getChunks)
+        //     .average()
+        //     .orElse(0.0);
 
         metrics = serversWD
             .stream()
