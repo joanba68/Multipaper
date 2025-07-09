@@ -43,6 +43,7 @@ interval = 5
 [quality]
 timeW = 4.5
 playerW = 1.5
+chunksW = 0.02
 idealPlayers = 40
 
 

@@ -27,6 +27,7 @@ public class MetricReporter extends BaseStrategy {
     private int msptHigh;
     private double timeW;
     private double playerW;
+    private double chunksW;
     private long idealPlayers;
     private double qualityT;
 
@@ -57,10 +58,13 @@ public class MetricReporter extends BaseStrategy {
         this.msptHigh = Math.toIntExact(config.getLong("performance.tick_length.high", (long) DEFAULT_MSPT_HIGH));
         this.timeW   = config.getDouble("quality.timeW", 5.0);
         this.playerW = config.getDouble("quality.playerW", 1.0);
+        this.chunksW = config.getDouble("quality.chunksW", 2.0);
         this.idealPlayers = config.getLong("quality.idealPlayers", (long) DEFAULT_IDEAL_PLAYERS);
+        // Quality threshold basement: mspt and players
         this.qualityT = msptHigh * this.timeW + idealPlayers * this.playerW;
+        //logger.info("Threshold for degraded performance > {}", Math.round(qualityT));
 
-        logger.info("Threshold for degraded performance > {}", Math.round(qualityT));
+        logger.info("Read params {} {} {} {} {}", msptHigh, timeW, playerW, chunksW, idealPlayers);
 
         JvmMetrics.builder().register();
 
@@ -159,12 +163,20 @@ public class MetricReporter extends BaseStrategy {
                 ServerConnection.getConnection(server.getServerInfo().getName()).getOwnedChunks()))
             .collect(Collectors.toList());
 
+        double avgChunks = serversWD.stream()
+            .mapToLong(ServerWithData::getChunks)
+            .average()
+            .orElse(0.0);
+        
+        qualityT = qualityT + chunksW * avgChunks;
+        //logger.info("Threshold for degraded performance > {}", Math.round(qualityT));
+
         metrics = serversWD
             .stream()
             .map(serverX -> new Metrics(
                 serverX.getServer().getServerInfo().getName(),
                 ServerConnection.getConnection(serverX.getServer().getServerInfo().getName()).getTimer().averageInMillis(),
-                ServerConnection.getConnection(serverX.getServer().getServerInfo().getName()).getTimer().averageInMillis() * this.timeW + serverX.getPlayers() * this.playerW,
+                ServerConnection.getConnection(serverX.getServer().getServerInfo().getName()).getTimer().averageInMillis() * this.timeW + serverX.getPlayers() * this.playerW + this.chunksW * serverX.getChunks(),
                 serverX.getPlayers(), 
                 serverX.getChunks()))
             .collect(Collectors.toList());
@@ -174,14 +186,18 @@ public class MetricReporter extends BaseStrategy {
             serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
             serverPlayersGauge.labelValues(wmetrics.getName()).set(wmetrics.getPlayers());
             serverChunksGauge.labelValues(wmetrics.getName()).set(wmetrics.getChunks());
-            logger.info("{} {} mspt {} Q {} QT {} P {} OWNC. degraded perf. is {}",
+            // I remove the degraded performance boolean, as we consider some threshold multipliers in strategies
+            // so this info is messing log
+            //logger.info("{} {} mspt {} Q {} QT {} P {} OWNC. degraded perf. is {}",
+            logger.info("{} {} mspt {} Q {} QT {} P {} OWNC",
             wmetrics.getName(),
             Math.round(wmetrics.getMspt()),
             Math.round(wmetrics.getQuality()), 
             Math.round(qualityT), 
             wmetrics.getPlayers(),
-            Math.round(wmetrics.getChunks()),
-            wmetrics.getQuality() > qualityT);
+            Math.round(wmetrics.getChunks()));
+            //Math.round(wmetrics.getChunks()),
+            //wmetrics.getQuality() > qualityT);
         }
 
         //logger.info(sep);

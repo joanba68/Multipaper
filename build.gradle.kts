@@ -27,7 +27,7 @@ allprojects {
 
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(17))
+            languageVersion.set(JavaLanguageVersion.of(21))
         }
     }
 }
@@ -127,17 +127,17 @@ publishing {
         }
     }
 }
-allprojects {
-    publishing {
-        repositories {
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/joanba68/MultiPaper")
-                credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
-        }
-    }
-}
+// allprojects {
+//     publishing {
+//         repositories {
+//             maven {
+//                 name = "GitHubPackages"
+//                 url = uri("https://maven.pkg.github.com/joanba68/MultiPaper")
+//                 credentials {
+//                     username = System.getenv("GITHUB_ACTOR")
+//                     password = System.getenv("GITHUB_TOKEN")
+//                 }
+//             }
+//         }
+//     }
+// }
