@@ -5,9 +5,7 @@ port = 35353
 [server-selection]
 enabled = true
 #strategy = "lowest_tick_time"
-strategy = "weighted_tick_players"
-timeW = 4.5
-playerW = 1.5
+strategy = "weighted_tick_players_v2"
 
 [drain-server]
 enabled = true

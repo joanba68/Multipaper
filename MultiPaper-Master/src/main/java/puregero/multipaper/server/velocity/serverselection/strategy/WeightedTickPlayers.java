@@ -19,8 +19,8 @@ public class WeightedTickPlayers implements ServerSelectionStrategy {
 
         Toml config = plugin.getConfig();
 
-        timeW   = config.getDouble("server-selection.timeW", 5.0);
-        playerW = config.getDouble("server-selection.playerW", 1.0);
+        timeW   = config.getDouble("quality.timeW", 5.0);
+        playerW = config.getDouble("quality.playerW", 1.0);
 
 
         plugin.getLogger().info("Weights configured: {} * time + {} * players", timeW, playerW);
