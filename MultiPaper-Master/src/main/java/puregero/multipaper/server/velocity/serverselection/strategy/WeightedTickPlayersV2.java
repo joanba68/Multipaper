@@ -47,7 +47,7 @@ public class WeightedTickPlayersV2 implements ServerSelectionStrategy {
         } else {
             
             Metrics bestMetric = metricRep.getMetrics().stream()
-                .max((Metrics m1, Metrics m2) -> Double.compare(m1.getQuality(), m2.getQuality()))
+                .min((Metrics m1, Metrics m2) -> Double.compare(m1.getQuality(), m2.getQuality()))
                 .orElse(null);
 
             if (bestMetric != null) {
