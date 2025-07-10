@@ -29,7 +29,9 @@ high = 40
 #strategy = "none" # none means no migration
 #strategy = "easy_strategy"
 #strategy = "balance_players_strategy"
-strategy = "balance_players_strategyv2"
+#strategy = "balance_players_strategyv2"
+strategy = "balance_players_strategy_v3"
+
 interval = 20
 minServers = 1
 maxPlayers = 10
