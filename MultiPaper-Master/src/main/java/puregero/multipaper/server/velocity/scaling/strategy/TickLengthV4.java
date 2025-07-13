@@ -44,8 +44,7 @@ public class TickLengthV4 extends BaseStrategy {
     public void onStartup(MultiPaperVelocity plugin) {
         super.onStartup(plugin);
 
-        this.red          = config.getDouble("performance.tick_length.redL", DEFAULT_RED_RATIO);
-
+        this.red             = config.getDouble("scaling.redS", DEFAULT_RED_RATIO);
         this.scaleUpRatio    = config.getDouble("scaling.scaleUpRatio", DEFAULT_SCALEUP_RATIO);
         this.scaleDownRatio  = config.getDouble("scaling.scaleDownRatio", DEFAULT_SCALEDOWN_RATIO);
         this.interval        = config.getLong("scaling.interval", DEFAULT_INTERVAL);
@@ -148,14 +147,13 @@ public class TickLengthV4 extends BaseStrategy {
         // From here, we have servers with degraded tick time and enough servers to migrate players
         // if too many servers are degraded, no need to migrate, should be scale up from scaling manager
 
+        int count = allServers.size();
         if (counterBad < redServers) {
-            logger.info("No scale up needed");
+            logger.info("No scale up needed now, there are {} servers", count);
         } else if (scalingUp == false) {
             // scaling only if there are not previous operations in place
-        
-            int count = allServers.size();
             if (count < maxServers) {
-                logger.info("Scaling up 1 server now there are {} servers...", count);
+                logger.info("Scaling up 1 server now there are {} servers", count);
                 scalingUp = true;
                 plugin.getScalingManager().scaleUp();
                 return;
