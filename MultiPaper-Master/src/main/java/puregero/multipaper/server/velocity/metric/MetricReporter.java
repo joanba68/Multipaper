@@ -184,6 +184,7 @@ public class MetricReporter extends BaseStrategy {
             .collect(Collectors.toList());
 
         logger.info("{} active servers", metrics.size());
+        int pcount = 0;
         for (Metrics wmetrics: metrics){
             serverQualityGauge.labelValues(wmetrics.getName()).set(wmetrics.getQuality());
             serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
@@ -201,7 +202,9 @@ public class MetricReporter extends BaseStrategy {
             Math.round(wmetrics.getChunks()));
             //Math.round(wmetrics.getChunks()),
             //wmetrics.getQuality() > qualityT);
+            pcount += wmetrics.getPlayers();
         }
+        logger.info("{} total players", pcount);
 
         logger.info(sep);
     }
