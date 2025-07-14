@@ -23,7 +23,7 @@ public class MetricReporter extends BaseStrategy {
     private static final int DEFAULT_IDEAL_PLAYERS = 40;
     private static final int DEFAULT_CHUNKS_PLAYER = 256;
 
-    //private static final String sep = "++++++++++++++++++++++++++++METRICS++++++++++++++++++++++++++++";
+    private static final String sep = "--------------------------------------------";
 
     private int msptHigh;
     private double timeW;
@@ -183,6 +183,7 @@ public class MetricReporter extends BaseStrategy {
                 serverX.getChunks()))
             .collect(Collectors.toList());
 
+        logger.info("{} active servers", metrics.size());
         for (Metrics wmetrics: metrics){
             serverQualityGauge.labelValues(wmetrics.getName()).set(wmetrics.getQuality());
             serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
@@ -202,7 +203,7 @@ public class MetricReporter extends BaseStrategy {
             //wmetrics.getQuality() > qualityT);
         }
 
-        //logger.info(sep);
+        logger.info(sep);
     }
     
 }
