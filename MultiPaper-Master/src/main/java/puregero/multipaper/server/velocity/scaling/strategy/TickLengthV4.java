@@ -119,16 +119,15 @@ public class TickLengthV4 extends BaseStrategy {
                         0,
                         0,
                         0,
-                        0
-                    );
+                        0);
                 } else {
-                return new ServerWithData(
-                    wmetrics.getQuality() >= qualityT * (1 + scaleUpRatio), // Comparar qualitat amb el llindar i donar un marge
-                    server,
-                    wmetrics.getPlayers(),
-                    wmetrics.getMspt(),
-                    wmetrics.getQuality(),
-                    wmetrics.getChunks());
+                    return new ServerWithData(
+                        wmetrics.getQuality() >= qualityT * (1 + scaleUpRatio), // Comparar qualitat amb el llindar i donar un marge
+                        server,
+                        wmetrics.getPlayers(),
+                        wmetrics.getMspt(),
+                        wmetrics.getQuality(),
+                        wmetrics.getChunks());
                 }
             })
             .collect(Collectors.toList());
@@ -141,19 +140,19 @@ public class TickLengthV4 extends BaseStrategy {
 
         // Now to consider scale up servers
         logger.info("Servers with degraded tick time: {}", counterBad);
-
         redServers      = (long) Math.round(red * (double) allServers.size());
+        logger.info("Required servers for scale up: {}", redServers);
         
         // From here, we have servers with degraded tick time and enough servers to migrate players
         // if too many servers are degraded, no need to migrate, should be scale up from scaling manager
 
         int count = allServers.size();
         if (counterBad < redServers) {
-            logger.info("No scale up needed now, there are {} servers", count);
+            logger.info("No scale up needed now");
         } else if (scalingUp == false) {
             // scaling only if there are not previous operations in place
             if (count < maxServers) {
-                logger.info("Scaling up 1 server now there are {} servers", count);
+                logger.info("Scaling up 1 server");
                 scalingUp = true;
                 plugin.getScalingManager().scaleUp();
                 return;

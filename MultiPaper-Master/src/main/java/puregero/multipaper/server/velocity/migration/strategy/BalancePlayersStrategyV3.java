@@ -85,13 +85,13 @@ public class BalancePlayersStrategyV3 extends BaseStrategy {
                         0
                     );
                 } else {
-                return new ServerWithData(
-                    wmetrics.getQuality() >= qualityT, // Comparar qualitat amb el llindar
-                    server,
-                    wmetrics.getPlayers(),
-                    wmetrics.getMspt(),
-                    wmetrics.getQuality(),
-                    wmetrics.getChunks());
+                    return new ServerWithData(
+                        wmetrics.getQuality() >= qualityT, // Comparar qualitat amb el llindar
+                        server,
+                        wmetrics.getPlayers(),
+                        wmetrics.getMspt(),
+                        wmetrics.getQuality(),
+                        wmetrics.getChunks());
                 }
             })
             .collect(Collectors.toList());
