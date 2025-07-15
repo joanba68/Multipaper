@@ -113,7 +113,7 @@ public class TickLengthV4 extends BaseStrategy {
                 Metrics wmetrics = metricsMap.get(serverName);
                 if (wmetrics == null) {
                     logger.warn("Metrics not found for server: {}", serverName);
-                    new ServerWithData(
+                    return new ServerWithData(
                         false, // Comparar qualitat amb el llindar
                         server,
                         0,
@@ -121,15 +121,15 @@ public class TickLengthV4 extends BaseStrategy {
                         0,
                         0
                     );
-                }
+                } else {
                 return new ServerWithData(
                     wmetrics.getQuality() >= qualityT * (1 + scaleUpRatio), // Comparar qualitat amb el llindar i donar un marge
                     server,
                     wmetrics.getPlayers(),
                     wmetrics.getMspt(),
                     wmetrics.getQuality(),
-                    wmetrics.getChunks()
-                );
+                    wmetrics.getChunks());
+                }
             })
             .collect(Collectors.toList());
 

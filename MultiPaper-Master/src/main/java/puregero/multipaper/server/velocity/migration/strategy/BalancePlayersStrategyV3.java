@@ -76,7 +76,7 @@ public class BalancePlayersStrategyV3 extends BaseStrategy {
                 Metrics wmetrics = metricsMap.get(serverName);
                 if (wmetrics == null) {
                     logger.warn("No s'han trobat mètriques per al servidor: {}", serverName);
-                    new ServerWithData(
+                    return new ServerWithData(
                         false, // Comparar qualitat amb el llindar
                         server,
                         0,
@@ -84,15 +84,15 @@ public class BalancePlayersStrategyV3 extends BaseStrategy {
                         0,
                         0
                     );
-                }
+                } else {
                 return new ServerWithData(
                     wmetrics.getQuality() >= qualityT, // Comparar qualitat amb el llindar
                     server,
                     wmetrics.getPlayers(),
                     wmetrics.getMspt(),
                     wmetrics.getQuality(),
-                    wmetrics.getChunks()
-                );
+                    wmetrics.getChunks());
+                }
             })
             .collect(Collectors.toList());
 
