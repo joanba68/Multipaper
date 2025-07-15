@@ -147,6 +147,7 @@ public class TickLengthV4 extends BaseStrategy {
         // if too many servers are degraded, no need to migrate, should be scale up from scaling manager
 
         int count = allServers.size();
+        logger.info("Total servers active: {}", count);
         if (counterBad < redServers) {
             logger.info("No scale up needed now");
         } else if (scalingUp == false) {
@@ -159,7 +160,13 @@ public class TickLengthV4 extends BaseStrategy {
             }
         }
 
-        // don't scale down if there is only a minimal number of servers
+        // don't scape down if there is an scale up operation in progress
+        if (scalingUp) {
+            logger.info("Scale up in progress, scale down not possible !!");
+            return;
+        }
+
+        // don't scale down if there is only a minimal number of servers or scale up in progress
         if(allServers.size() < minServers) {
             logger.info("Now {} active servers, at least {} for scale down !!", allServers.size(), minServers);
             return;
