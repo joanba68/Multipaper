@@ -33,6 +33,9 @@ public class MetricReporter extends BaseStrategy {
     private long idealPlayers;
     private double qualityT;
 
+    private int logFreq;
+    private int logCount;
+
     private Collection<Metrics> metrics;
     private Gauge serverQualityGauge;
     private Gauge serverMSPTGauge;
@@ -63,6 +66,16 @@ public class MetricReporter extends BaseStrategy {
         this.chunksxPlayer = config.getLong("quality.chunksxPlayer", (long) DEFAULT_CHUNKS_PLAYER);
         this.chunksW = config.getDouble("quality.chunksW", 2.0);
         this.idealPlayers = config.getLong("quality.idealPlayers", (long) DEFAULT_IDEAL_PLAYERS);
+
+        long wint = config.getLong("metric.interval", (long) 0);
+
+        if (wint < 5) {
+            logFreq = 3;
+        } else {
+            logFreq = 1;
+        }
+        logCount = 0;
+
         // Quality threshold basement: mspt, players
         //this.qualityT = msptHigh * this.timeW + idealPlayers * this.playerW;
         // Quality threshold basement: mspt, players
@@ -110,6 +123,15 @@ public class MetricReporter extends BaseStrategy {
 
     @Override
     public void executeStrategy() {
+
+        // to not overload log...
+        boolean logShow = false;
+        logCount += 1;
+        if (logCount == logFreq) {
+            logCount = 0;
+            logShow  = true;
+        }
+
         //logger.info(sep);
 
         // Obtenir tots els servidors i filtrar els actius
@@ -133,7 +155,7 @@ public class MetricReporter extends BaseStrategy {
 
         // at startup time there are no registered servers...
         if (allServers.size() == 0) {
-            logger.info("Waiting for servers before repoprting metrics");
+            if (logShow) logger.info("Waiting for servers before repoprting metrics");
             return;
         }
 
@@ -183,7 +205,7 @@ public class MetricReporter extends BaseStrategy {
                 serverX.getChunks()))
             .collect(Collectors.toList());
 
-        logger.info("{} active servers", metrics.size());
+        if (logShow) logger.info("{} active servers", metrics.size());
         int pcount = 0;
         for (Metrics wmetrics: metrics){
             serverQualityGauge.labelValues(wmetrics.getName()).set(wmetrics.getQuality());
@@ -193,7 +215,7 @@ public class MetricReporter extends BaseStrategy {
             // I remove the degraded performance boolean, as we consider some threshold multipliers in strategies
             // so this info is messing log
             //logger.info("{} {} mspt {} Q {} QT {} P {} OWNC. degraded perf. is {}",
-            logger.info("{} {} mspt {} Q {} QT {} P {} OWNC",
+            if (logShow) logger.info("{} {} mspt {} Q {} QT {} P {} OWNC",
             wmetrics.getName(),
             Math.round(wmetrics.getMspt()),
             Math.round(wmetrics.getQuality()), 
@@ -204,9 +226,9 @@ public class MetricReporter extends BaseStrategy {
             //wmetrics.getQuality() > qualityT);
             pcount += wmetrics.getPlayers();
         }
-        logger.info("{} total players", pcount);
+        if (logShow) logger.info("{} total players", pcount);
 
-        logger.info(sep);
+        if (logShow) logger.info(sep);
     }
     
 }

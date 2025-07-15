@@ -32,14 +32,13 @@ high = 40
 #strategy = "balance_players_strategy"
 #strategy = "balance_players_strategyv2"
 strategy = "balance_players_strategy_v3"
-
 interval = 20
 minServers = 1
 maxPlayers = 10
 
 [metric]
 strategy = "metric_reporter"
-interval = 5
+interval = 2
 
 [quality]
 timeW = 4.5
