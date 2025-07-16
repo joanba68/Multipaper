@@ -21,6 +21,7 @@ interval = 15
 minServers = 2
 maxServers = 10
 redS = 0.5
+dynamic=true
 
 [performance.tick_length]
 low = 10

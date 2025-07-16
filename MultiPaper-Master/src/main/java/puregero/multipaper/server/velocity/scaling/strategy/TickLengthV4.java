@@ -33,6 +33,7 @@ public class TickLengthV4 extends BaseStrategy {
     private double red;
     private int minServers;
     private int maxServers;
+    private boolean dynamic;
 
     private MetricReporter metrics;
 
@@ -51,7 +52,8 @@ public class TickLengthV4 extends BaseStrategy {
         this.timeUnit        = TimeUnit.valueOf(config.getString("scaling.units", DEFAULT_UNIT_TIME));
         this.minServers      = Math.toIntExact(config.getLong("scaling.minServers", (long) DEFAULT_MIN_SERVERS_DOWN));
         this.maxServers      = Math.toIntExact(config.getLong("scaling.maxServers", (long) DEFAULT_MAX_SERVERS_UP));
-
+        this.dynamic         = config.getBoolean("scaling.dynamic", false);
+        
         this.scalingUp   = false;
         this.scalingDown = false;
 
@@ -156,7 +158,11 @@ public class TickLengthV4 extends BaseStrategy {
                 int scaling = Math.round(redServers/2);
                 logger.info("Scaling up {} server", scaling);
                 scalingUp = true;
-                plugin.getScalingManager().scaleUp(scaling);
+                if (dynamic) {
+                    plugin.getScalingManager().scaleUp(scaling);
+                } else {
+                    plugin.getScalingManager().scaleUp();
+                }
                 return;
             }
         }
