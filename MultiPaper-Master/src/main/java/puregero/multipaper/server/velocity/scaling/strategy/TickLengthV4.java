@@ -150,7 +150,7 @@ public class TickLengthV4 extends BaseStrategy {
         logger.info("Total servers active: {}", count);
         if (counterBad < redServers) {
             logger.info("No scale up needed now");
-        } else if (scalingUp == false) {
+        } else if (scalingUp == false  && counterBad != 0) {
             // scaling only if there are not previous operations in place
             if (count < maxServers) {
                 logger.info("Scaling up 1 server");
