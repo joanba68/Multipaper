@@ -25,6 +25,8 @@ public class TickLengthV4 extends BaseStrategy {
     private static final double DEFAULT_SCALEDOWN_RATIO = 0.3;
     private static final int DEFAULT_MIN_SERVERS_DOWN = 2;
     private static final int DEFAULT_MAX_SERVERS_UP = 10;
+    private static final int DEFAULT_MIN_STEP = 2;
+    private static final int DEFAULT_MAX_STEP = 5;
 
     private double scaleUpRatio;
     private boolean scalingUp;
@@ -34,6 +36,8 @@ public class TickLengthV4 extends BaseStrategy {
     private int minServers;
     private int maxServers;
     private boolean dynamic;
+    private int minStep;
+    private int maxStep;
 
     private MetricReporter metrics;
 
@@ -53,7 +57,8 @@ public class TickLengthV4 extends BaseStrategy {
         this.minServers      = Math.toIntExact(config.getLong("scaling.minServers", (long) DEFAULT_MIN_SERVERS_DOWN));
         this.maxServers      = Math.toIntExact(config.getLong("scaling.maxServers", (long) DEFAULT_MAX_SERVERS_UP));
         this.dynamic         = config.getBoolean("scaling.dynamic", false);
-        
+        this.minStep        = Math.toIntExact(config.getLong("scaling.minStep", (long) DEFAULT_MIN_STEP));
+        this.maxStep        = Math.toIntExact(config.getLong("scaling.maxStep", (long) DEFAULT_MAX_STEP));
         this.scalingUp   = false;
         this.scalingDown = false;
 
@@ -157,6 +162,10 @@ public class TickLengthV4 extends BaseStrategy {
             if (count < maxServers) {
                 scalingUp = true;
                 if (dynamic && redServers > 0) {
+                    // To speed up scaling
+                    if (redServers < minStep) redServers = minStep;
+                    // To limit the nº of servers to be created
+                    if (redServers > maxStep) redServers = maxStep;
                     logger.info("Scaling up {} server/s", redServers);
                     plugin.getScalingManager().scaleUp((int) redServers);
                 } else {

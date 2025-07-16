@@ -22,6 +22,8 @@ minServers = 2
 maxServers = 10
 redS = 0.5
 dynamic=true
+minStep = 2
+maxStep = 4
 
 [performance.tick_length]
 low = 10
