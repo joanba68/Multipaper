@@ -24,10 +24,11 @@ public class BalancePlayersStrategyV3 extends BaseStrategy {
     private static final double DEFAULT_PLAYERS_TRANSFER = 0.2;
     private static final int DEFAULT_MIN_SERVERS_MIG = 5;
     private static final int DEFAULT_MAX_PLAYERS_TO_MOVE = 5;
+    private static final double DEFAULT_SCALEDOWN_RATIO = 0.3;
 
     private int minServers;
     private int maxPlayers;
-
+    private double scaleDownRatio;
 
     private MetricReporter metrics;
 
@@ -42,6 +43,7 @@ public class BalancePlayersStrategyV3 extends BaseStrategy {
         this.timeUnit = TimeUnit.valueOf(config.getString("migration.units", DEFAULT_UNIT_TIME));
         this.minServers  = Math.toIntExact(config.getLong("migration.minServers", (long) DEFAULT_MIN_SERVERS_MIG));
         this.maxPlayers  = Math.toIntExact(config.getLong("migration.maxPlayers", (long) DEFAULT_MAX_PLAYERS_TO_MOVE));
+        this.scaleDownRatio  = config.getDouble("scaling.scaleDownRatio", DEFAULT_SCALEDOWN_RATIO);
     }
 
     @Override
@@ -139,11 +141,11 @@ public class BalancePlayersStrategyV3 extends BaseStrategy {
         // Player migration not needed if worst server has good quality
         boolean isWorstServerDegraded = serversWD.stream()
             .filter(server -> server.getServer().getServerInfo().getName().equals(worst.getServer().getServerInfo().getName()))
-            .map(server -> server.getQuality() < qualityT )
+            .map(server -> server.getQuality() < qualityT * (1 - scaleDownRatio))
             .reduce(Boolean::logicalAnd)
             .orElse(false);
         if (isWorstServerDegraded) {
-            logger.info("No transfer needed as worst server is not degraded !!");
+            logger.info("No transfer needed as worst server is not so degraded !!");
             return;
         }
 
