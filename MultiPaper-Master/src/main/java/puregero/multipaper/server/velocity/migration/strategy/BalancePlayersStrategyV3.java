@@ -136,6 +136,17 @@ public class BalancePlayersStrategyV3 extends BaseStrategy {
             return;
         }
         
+        // Player migration not needed if worst server has good quality
+        boolean isWorstServerDegraded = serversWD.stream()
+            .filter(server -> server.getServer().getServerInfo().getName().equals(worst.getServer().getServerInfo().getName()))
+            .map(server -> server.getQuality() < qualityT )
+            .reduce(Boolean::logicalAnd)
+            .orElse(false);
+        if (isWorstServerDegraded) {
+            logger.info("No transfer needed as worst server is not degraded !!");
+            return;
+        }
+
         // playersToMove can be negative = worst server has less players than ideal number
         // playersToMove can be zero but still very degraded, so tick time should drive the migration
         long playersToMove = Math.abs(worst.getPlayers() - idealPlayersPerServer);
