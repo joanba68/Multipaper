@@ -156,11 +156,13 @@ public class TickLengthV4 extends BaseStrategy {
             // scaling only if there are not previous operations in place
             if (count < maxServers) {
                 int scaling = Math.round(redServers/2);
-                logger.info("Scaling up {} server", scaling);
+                if (scaling == 0) scaling = 1;
                 scalingUp = true;
                 if (dynamic) {
+                    logger.info("Scaling up {} server", scaling);
                     plugin.getScalingManager().scaleUp(scaling);
                 } else {
+                    logger.info("Scaling up 1 server");
                     plugin.getScalingManager().scaleUp();
                 }
                 return;
