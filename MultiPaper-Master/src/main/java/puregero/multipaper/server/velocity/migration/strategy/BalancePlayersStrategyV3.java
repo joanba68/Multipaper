@@ -104,7 +104,7 @@ public class BalancePlayersStrategyV3 extends BaseStrategy {
         }
 
         int idealPlayersPerServer = totalPlayers / Math.max(1, serversWD.size());
-        logger.info("Ideal number of players per server is {}", idealPlayersPerServer);
+        logger.info("Avg number of players per server is {}", idealPlayersPerServer);
 
         Optional<ServerWithData> bestServer = serversWD.stream()
                 .filter(s -> !s.getPerf() && s.getPlayers() <= idealPlayersPerServer * (1 + DEFAULT_PLAYERS_TRANSFER))
