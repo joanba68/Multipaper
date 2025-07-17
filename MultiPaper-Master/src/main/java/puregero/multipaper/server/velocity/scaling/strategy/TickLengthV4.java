@@ -84,7 +84,6 @@ public class TickLengthV4 extends BaseStrategy {
     public void executeStrategy() {
 
         long redServers;
-        long scaleUpServers;
 
         metrics = plugin.getMetricReporter();
 

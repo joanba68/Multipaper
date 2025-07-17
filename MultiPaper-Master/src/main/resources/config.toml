@@ -15,7 +15,7 @@ strategy = "default"
 [scaling]
 #strategy = "none" # none means no scaling
 strategy = "tick_length_v4"
-scaleUpRatio = 0.2
+scaleUpRatio = 0.1
 scaleDownRatio = 0.2
 interval = 15
 minServers = 2
@@ -34,7 +34,7 @@ high = 40
 #strategy = "easy_strategy"
 #strategy = "balance_players_strategy"
 #strategy = "balance_players_strategyv2"
-strategy = "balance_players_strategy_v3"
+strategy = "balance_players_strategy_v4"
 interval = 20
 minServers = 1
 maxPlayers = 10
