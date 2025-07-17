@@ -1,6 +1,7 @@
 [master]
 timer-size = 10
 port = 35353
+debug=true
 
 [server-selection]
 enabled = true

@@ -1,7 +1,9 @@
 package puregero.multipaper.server.velocity.migration.strategy;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -124,6 +126,7 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
             logger.info("No healthy servers to transfer players found");
             return;
         }
+        List<PlayersCount> mBestCounts = new ArrayList<>(bestCounts);
 
         // Identify worst servers and count players to transfer
         Collection<PlayersCount> worstCounts = serversWD.stream()
@@ -138,7 +141,11 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
 
         // Migration loop
         worstCounts.forEach(wcount -> {
-            PlayersCount bcount = bestCounts.stream()
+            if (mBestCounts.isEmpty()) {
+                logger.info("No more servers to transfer players found");
+                return;
+            }
+            PlayersCount bcount = mBestCounts.stream()
                 .min(Comparator.comparingDouble(count -> count.server().getPlayers()))
                 .orElse(null);
             if (debug) {
@@ -151,11 +158,13 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
                 int playersToMove = Math.min(wcount.playerCount(), bcount.playerCount());
                 if (playersToMove > 0) {            
                     wcount.server().getServer().getPlayersConnected().stream()
-                        .limit(playersToMove)
+                        .limit(maxPlayers)
                         .forEach(player -> plugin.transferPlayer(player, bcount.server().getServer(), 3));
                     logger.info("Moved {} players from {} to {}", playersToMove, 
                         wcount.server().getServer().getServerInfo().getName(),
                         bcount.server().getServer().getServerInfo().getName());
+                    // To avoid to get more players in same execution
+                    mBestCounts.remove(bcount);
                 } else {
                     logger.info("Not possible to transfer {} players to {}", playersToMove, bcount.server().getServer().getServerInfo().getName());
                 }

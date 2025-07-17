@@ -118,7 +118,7 @@ public class TickLengthV4 extends BaseStrategy {
                 String serverName = server.getServerInfo().getName();
                 Metrics wmetrics = metricsMap.get(serverName);
                 if (wmetrics == null) {
-                    logger.warn("Metrics not found for server: {}", serverName);
+                    logger.warn("Metrics not found for server {}", serverName);
                     return new ServerWithData(
                         false, // Comparar qualitat amb el llindar
                         server,
