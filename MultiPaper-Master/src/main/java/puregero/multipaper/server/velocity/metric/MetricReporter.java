@@ -86,11 +86,11 @@ public class MetricReporter extends BaseStrategy {
 
         JvmMetrics.builder().register();
 
-        serverQualityGauge = Gauge.builder()
-            .name("velocity_server_quality")
-            .help("Quality metric for each server based on MSPT and player count")
-            .labelNames("server_name")
-            .register();
+        // serverQualityGauge = Gauge.builder()
+        //     .name("velocity_server_quality")
+        //     .help("Quality metric for each server based on MSPT and player count")
+        //     .labelNames("server_name")
+        //     .register();
 
         // serverMSPTGauge = Gauge.builder()
         //     .name("velocity_server_mspt")
@@ -110,14 +110,14 @@ public class MetricReporter extends BaseStrategy {
         //     .labelNames("server_name")
         //     .register();
 
-        try {
-            HTTPServer server = HTTPServer.builder()
-                    .port(9400)
-                    .buildAndStart();
-            logger.info("HTTPServer listening on port http://localhost:{}/metrics", server.getPort());
-        } catch (IOException e) {
-            logger.error("Failed to start Prometheus HTTP server: {}", e.getMessage());
-        }
+        // try {
+        //     HTTPServer server = HTTPServer.builder()
+        //             .port(9400)
+        //             .buildAndStart();
+        //     logger.info("HTTPServer listening on port http://localhost:{}/metrics", server.getPort());
+        // } catch (IOException e) {
+        //     logger.error("Failed to start Prometheus HTTP server: {}", e.getMessage());
+        // }
 
     }
 
@@ -144,14 +144,14 @@ public class MetricReporter extends BaseStrategy {
         // Primer es posa a zero el darrer valor i a la següent crida s'elimina el gauge
 
         // Si el servidor s'ha posat a zero, ha d'estar a la llista per eliminar els gauges
-        for (String serverName : toRemoveServers) {
-            serverQualityGauge.remove(serverName);
-            // serverMSPTGauge.remove(serverName);
-            // serverPlayersGauge.remove(serverName);
-            // serverChunksGauge.remove(serverName);
-            logger.info("Removed metric gauges for server: {}", serverName);
-        }
-        toRemoveServers.clear();
+        // for (String serverName : toRemoveServers) {
+        //     serverQualityGauge.remove(serverName);
+        //     serverMSPTGauge.remove(serverName);
+        //     serverPlayersGauge.remove(serverName);
+        //     serverChunksGauge.remove(serverName);
+        //     logger.info("Removed metric gauges for server: {}", serverName);
+        // }
+        // toRemoveServers.clear();
 
         // at startup time there are no registered servers...
         if (allServers.size() == 0) {
@@ -164,16 +164,16 @@ public class MetricReporter extends BaseStrategy {
             .collect(Collectors.toSet());
 
         // Posar a zero mètriques dels servidors que ja no existeixen
-        for (String serverName : previousServers) {
-            if (!currentServers.contains(serverName)) {
-                logger.info("Set to zero metrics for server: {}", serverName);
-                serverQualityGauge.labelValues(serverName).set(0);
-                // serverMSPTGauge.labelValues(serverName).set(0);
-                // serverPlayersGauge.labelValues(serverName).set(0);
-                // serverChunksGauge.labelValues(serverName).set(0);
-                toRemoveServers.add(serverName);
-            }
-        }
+        // for (String serverName : previousServers) {
+        //     if (!currentServers.contains(serverName)) {
+        //         logger.info("Set to zero metrics for server: {}", serverName);
+        //         serverQualityGauge.labelValues(serverName).set(0);
+        //         serverMSPTGauge.labelValues(serverName).set(0);
+        //         serverPlayersGauge.labelValues(serverName).set(0);
+        //         serverChunksGauge.labelValues(serverName).set(0);
+        //         toRemoveServers.add(serverName);
+        //     }
+        // }
 
         // Actualitzar la llista de servidors anteriors
         previousServers.clear();
@@ -208,7 +208,7 @@ public class MetricReporter extends BaseStrategy {
         if (logShow) logger.info("{} active servers", metrics.size());
         int pcount = 0;
         for (Metrics wmetrics: metrics){
-            serverQualityGauge.labelValues(wmetrics.getName()).set(wmetrics.getQuality());
+            // serverQualityGauge.labelValues(wmetrics.getName()).set(wmetrics.getQuality());
             // serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
             // serverPlayersGauge.labelValues(wmetrics.getName()).set(wmetrics.getPlayers());
             // serverChunksGauge.labelValues(wmetrics.getName()).set(wmetrics.getChunks());
