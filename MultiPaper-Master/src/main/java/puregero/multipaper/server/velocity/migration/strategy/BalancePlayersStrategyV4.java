@@ -155,7 +155,7 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
             if (wcount.server().getServer().equals(bcount.server().getServer())){
                 logger.info("No transfer possible as best and worst are the same !!");
             } else {
-                int playersToMove = Math.min(wcount.playerCount(), bcount.playerCount());
+                int playersToMove = Math.min(Math.min(wcount.playerCount(), bcount.playerCount()), maxPlayers);
                 if (playersToMove > 0) {            
                     wcount.server().getServer().getPlayersConnected().stream()
                         .limit(maxPlayers)
