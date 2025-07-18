@@ -92,23 +92,23 @@ public class MetricReporter extends BaseStrategy {
             .labelNames("server_name")
             .register();
 
-        serverMSPTGauge = Gauge.builder()
-            .name("velocity_server_mspt")
-            .help("MSPT metric for each server")
-            .labelNames("server_name")
-            .register();
+        // serverMSPTGauge = Gauge.builder()
+        //     .name("velocity_server_mspt")
+        //     .help("MSPT metric for each server")
+        //     .labelNames("server_name")
+        //     .register();
 
-        serverPlayersGauge = Gauge.builder()
-            .name("velocity_server_players")
-            .help("Players count for each server")
-            .labelNames("server_name")
-            .register();
+        // serverPlayersGauge = Gauge.builder()
+        //     .name("velocity_server_players")
+        //     .help("Players count for each server")
+        //     .labelNames("server_name")
+        //     .register();
 
-        serverChunksGauge = Gauge.builder()
-            .name("velocity_server_chunks")
-            .help("Owned chunks count for each server")
-            .labelNames("server_name")
-            .register();
+        // serverChunksGauge = Gauge.builder()
+        //     .name("velocity_server_chunks")
+        //     .help("Owned chunks count for each server")
+        //     .labelNames("server_name")
+        //     .register();
 
         try {
             HTTPServer server = HTTPServer.builder()
@@ -146,9 +146,9 @@ public class MetricReporter extends BaseStrategy {
         // Si el servidor s'ha posat a zero, ha d'estar a la llista per eliminar els gauges
         for (String serverName : toRemoveServers) {
             serverQualityGauge.remove(serverName);
-            serverMSPTGauge.remove(serverName);
-            serverPlayersGauge.remove(serverName);
-            serverChunksGauge.remove(serverName);
+            // serverMSPTGauge.remove(serverName);
+            // serverPlayersGauge.remove(serverName);
+            // serverChunksGauge.remove(serverName);
             logger.info("Removed metric gauges for server: {}", serverName);
         }
         toRemoveServers.clear();
@@ -168,9 +168,9 @@ public class MetricReporter extends BaseStrategy {
             if (!currentServers.contains(serverName)) {
                 logger.info("Set to zero metrics for server: {}", serverName);
                 serverQualityGauge.labelValues(serverName).set(0);
-                serverMSPTGauge.labelValues(serverName).set(0);
-                serverPlayersGauge.labelValues(serverName).set(0);
-                serverChunksGauge.labelValues(serverName).set(0);
+                // serverMSPTGauge.labelValues(serverName).set(0);
+                // serverPlayersGauge.labelValues(serverName).set(0);
+                // serverChunksGauge.labelValues(serverName).set(0);
                 toRemoveServers.add(serverName);
             }
         }
@@ -209,9 +209,9 @@ public class MetricReporter extends BaseStrategy {
         int pcount = 0;
         for (Metrics wmetrics: metrics){
             serverQualityGauge.labelValues(wmetrics.getName()).set(wmetrics.getQuality());
-            serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
-            serverPlayersGauge.labelValues(wmetrics.getName()).set(wmetrics.getPlayers());
-            serverChunksGauge.labelValues(wmetrics.getName()).set(wmetrics.getChunks());
+            // serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
+            // serverPlayersGauge.labelValues(wmetrics.getName()).set(wmetrics.getPlayers());
+            // serverChunksGauge.labelValues(wmetrics.getName()).set(wmetrics.getChunks());
             // I remove the degraded performance boolean, as we consider some threshold multipliers in strategies
             // so this info is messing log
             //logger.info("{} {} mspt {} Q {} QT {} P {} OWNC. degraded perf. is {}",
