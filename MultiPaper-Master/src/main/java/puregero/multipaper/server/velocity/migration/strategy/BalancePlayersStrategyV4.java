@@ -166,7 +166,7 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
                     // To avoid to get more players in same execution
                     mBestCounts.remove(bcount);
                 } else {
-                    logger.info("Not possible to transfer {} players to {}", playersToMove, bcount.server().getServer().getServerInfo().getName());
+                    logger.info("Not possible to transfer {} players to {}", Math.min(playersToMove, maxPlayers), bcount.server().getServer().getServerInfo().getName());
                 }
             }
         });    
