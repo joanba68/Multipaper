@@ -35,8 +35,6 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
 
     private MetricReporter metrics;
 
-    private boolean debug;
-
     public BalancePlayersStrategyV4(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
     }
@@ -50,7 +48,6 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
         this.maxPlayers      = Math.toIntExact(config.getLong("migration.maxPlayers", (long) DEFAULT_MAX_PLAYERS_TO_MOVE));
         this.scaleUpRatio    = config.getDouble("scaling.scaleUpRatio", DEFAULT_SCALEUP_RATIO);
         this.scaleDownRatio  = config.getDouble("scaling.scaleDownRatio", DEFAULT_SCALEDOWN_RATIO);
-        this.debug           = config.getBoolean("master.debug", false);
     }
 
     @Override
@@ -148,14 +145,11 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
             PlayersCount bcount = mBestCounts.stream()
                 .min(Comparator.comparingDouble(count -> count.server().getPlayers()))
                 .orElse(null);
-            if (debug) {
-                logger.info("trying to move {} players from {}", wcount.playerCount(), wcount.server().getServer().getServerInfo().getName());
-                logger.info("space for {} players in {}", bcount.playerCount(), bcount.server().getServer().getServerInfo().getName());
-            }
             if (wcount.server().getServer().equals(bcount.server().getServer())){
                 logger.info("No transfer possible as best and worst are the same !!");
             } else {
                 int playersToMove = Math.min(Math.min(wcount.playerCount(), bcount.playerCount()), maxPlayers);
+                logger.info("trying to move {} players", playersToMove);
                 if (playersToMove > 0) {            
                     wcount.server().getServer().getPlayersConnected().stream()
                         .limit(maxPlayers)
