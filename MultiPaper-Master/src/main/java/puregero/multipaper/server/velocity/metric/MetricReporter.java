@@ -58,7 +58,7 @@ public class MetricReporter extends BaseStrategy {
 
     @Override
     public void onStartup(MultiPaperVelocity plugin) {
-        super.onStartup(plugin);
+        //super.onStartup(plugin);
 
         this.msptHigh = Math.toIntExact(config.getLong("performance.tick_length.high", (long) DEFAULT_MSPT_HIGH));
         this.timeW   = config.getDouble("quality.timeW", 5.0);
@@ -118,6 +118,8 @@ public class MetricReporter extends BaseStrategy {
         } catch (IOException e) {
             logger.error("Failed to start Prometheus HTTP server: {}", e.getMessage());
         }
+
+        super.onStartup(plugin);
 
     }
 
