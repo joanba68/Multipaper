@@ -45,6 +45,10 @@ public class TickLengthV4 extends BaseStrategy {
         super(interval, timeUnit);
     }
 
+    public boolean getStateSCUp() {
+        return scalingUp;
+    }
+
     @Override
     public void onStartup(MultiPaperVelocity plugin) {
         super.onStartup(plugin);

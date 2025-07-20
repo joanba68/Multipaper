@@ -16,6 +16,7 @@ import puregero.multipaper.server.velocity.MultiPaperVelocity;
 import puregero.multipaper.server.velocity.ServerWithData;
 import puregero.multipaper.server.velocity.metric.MetricReporter;
 import puregero.multipaper.server.velocity.metric.Metrics;
+import puregero.multipaper.server.velocity.scaling.strategy.TickLengthV4;
 
 public class BalancePlayersStrategyV4 extends BaseStrategy {
 
@@ -32,6 +33,7 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
     private int maxPlayers;
     private double scaleUpRatio;
     private double scaleDownRatio;
+    private boolean parallel;
 
     private MetricReporter metrics;
 
@@ -48,6 +50,7 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
         this.maxPlayers      = Math.toIntExact(config.getLong("migration.maxPlayers", (long) DEFAULT_MAX_PLAYERS_TO_MOVE));
         this.scaleUpRatio    = config.getDouble("scaling.scaleUpRatio", DEFAULT_SCALEUP_RATIO);
         this.scaleDownRatio  = config.getDouble("scaling.scaleDownRatio", DEFAULT_SCALEDOWN_RATIO);
+        this.parallel        = config.getBoolean("migration.parallel", false);
     }
 
     @Override
@@ -69,7 +72,15 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
 
         if (allServers.size() < minServers) {
             logger.info("Not enough servers for player migrations");
-            //return;
+            return;
+        }
+
+        // Avoid to run player migrations when scaling up is in progress
+        if (plugin.getScalingStrategy() instanceof TickLengthV4) {
+            if (((TickLengthV4) plugin.getScalingStrategy()).getStateSCUp() && !parallel) {
+                logger.info("Scaling up servers in progress, waiting for player migrations...");
+                return;
+            }
         }
 
         Map<String, Metrics> metricsMap = metrics.getMetrics().stream()

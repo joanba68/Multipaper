@@ -53,6 +53,7 @@ public class MultiPaperVelocity {
 
     private DrainStrategy drainStrategy;
     private ServerSelectionStrategy serverSelectionStrategy;
+    private Strategy scalingStrategy;
     private MetricReporter metricReporter;
 
     private final StrategyManager strategyManager;
@@ -121,7 +122,7 @@ public class MultiPaperVelocity {
                 DrainStrategy.class
         );
 
-        Strategy scalingStrategy = strategyManager.loadStrategy(
+        scalingStrategy = strategyManager.loadStrategy(
                 "scaling.strategy.",
                 config.getString("scaling.strategy", "none"),
                 Strategy.class,
@@ -207,7 +208,7 @@ public class MultiPaperVelocity {
             }
             case "scaling" -> {
                 strategyManager.removeStrategy("scaling");
-                Strategy scalingStrategy = strategyManager.loadStrategy(
+                scalingStrategy = strategyManager.loadStrategy(
                         "scaling.strategy.",
                         name,
                         Strategy.class,
@@ -400,6 +401,10 @@ public class MultiPaperVelocity {
 
     public MetricReporter getMetricReporter() {
         return metricReporter;
+    }
+
+    public Strategy getScalingStrategy() {
+        return scalingStrategy;
     }
 
     public boolean executeDrainStrategy(String serverName) {
