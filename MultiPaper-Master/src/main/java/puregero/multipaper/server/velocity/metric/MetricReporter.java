@@ -218,16 +218,18 @@ public class MetricReporter extends BaseStrategy {
                 serverX.getChunks()))
             .collect(Collectors.toList());
 
-        if (logShow) logger.info("{} active servers", metrics.size());
+        if (logShow) logger.info("{} active servers, metrics level {}", metrics.size(), level);
         int pcount = 0;
         for (Metrics wmetrics: metrics){
+            if (level >= 1) {
             serverQualityGauge.labelValues(wmetrics.getName()).set(wmetrics.getQuality());
-            serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
-            serverPlayersGauge.labelValues(wmetrics.getName()).set(wmetrics.getPlayers());
-            serverChunksGauge.labelValues(wmetrics.getName()).set(wmetrics.getChunks());
-            // I remove the degraded performance boolean, as we consider some threshold multipliers in strategies
-            // so this info is messing log
-            //logger.info("{} {} mspt {} Q {} QT {} P {} OWNC. degraded perf. is {}",
+                if (level >= 2) {
+                    serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
+                    serverPlayersGauge.labelValues(wmetrics.getName()).set(wmetrics.getPlayers());
+                    serverChunksGauge.labelValues(wmetrics.getName()).set(wmetrics.getChunks());
+                }
+            }
+
             if (logShow) logger.info("{} {} mspt {} Q {} QT {} P {} OWNC",
             wmetrics.getName(),
             Math.round(wmetrics.getMspt()),
@@ -235,8 +237,7 @@ public class MetricReporter extends BaseStrategy {
             Math.round(qualityT), 
             wmetrics.getPlayers(),
             Math.round(wmetrics.getChunks()));
-            //Math.round(wmetrics.getChunks()),
-            //wmetrics.getQuality() > qualityT);
+
             pcount += wmetrics.getPlayers();
         }
         if (logShow) logger.info("{} total players", pcount);
