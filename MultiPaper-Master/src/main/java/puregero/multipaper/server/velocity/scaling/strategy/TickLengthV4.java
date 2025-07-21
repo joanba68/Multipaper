@@ -177,7 +177,7 @@ public class TickLengthV4 extends BaseStrategy {
             }
         }
 
-        // don't scape down if there is an scale up operation in progress
+        // don't scale down if there is an scale up operation in progress
         if (scalingUp) {
             logger.info("Scale up in progress, scale down not possible !!");
             return;

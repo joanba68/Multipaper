@@ -44,6 +44,7 @@ parallel = false
 [metric]
 strategy = "metric_reporter"
 interval = 2
+level = 1
 
 [quality]
 timeW = 4.5
