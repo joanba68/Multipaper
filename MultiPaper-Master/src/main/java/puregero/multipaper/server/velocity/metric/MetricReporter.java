@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
 import io.prometheus.metrics.core.metrics.Gauge;
-import io.prometheus.metrics.exporter.httpserver.HTTPServer;
-import io.prometheus.metrics.instrumentation.jvm.JvmMetrics;
+//import io.prometheus.metrics.exporter.httpserver.HTTPServer;
+//import io.prometheus.metrics.instrumentation.jvm.JvmMetrics;
 import puregero.multipaper.server.ServerConnection;
 import puregero.multipaper.server.velocity.BaseStrategy;
 import puregero.multipaper.server.velocity.MultiPaperVelocity;
@@ -38,12 +38,12 @@ public class MetricReporter extends BaseStrategy {
     private int logCount;
 
     private Collection<Metrics> metrics;
-    private Gauge serverQualityGauge;
-    private Gauge serverMSPTGauge;
-    private Gauge serverPlayersGauge;
-    private Gauge serverChunksGauge;
-    private Set<String> previousServers = new HashSet<>();
-    private Set<String> toRemoveServers = new HashSet<>();
+    // private Gauge serverQualityGauge;
+    // private Gauge serverMSPTGauge;
+    // private Gauge serverPlayersGauge;
+    // private Gauge serverChunksGauge;
+    // private Set<String> previousServers = new HashSet<>();
+    // private Set<String> toRemoveServers = new HashSet<>();
 
     public MetricReporter(Long interval, TimeUnit timeUnit) {
         super(interval, timeUnit);
@@ -86,44 +86,43 @@ public class MetricReporter extends BaseStrategy {
 
         logger.info("Read params {} {} {} {} {}", msptHigh, timeW, playerW, chunksW, idealPlayers);
 
-        JvmMetrics.builder().register();
+        // JvmMetrics.builder().register();
+        // if (level >= 1) {
+        //     serverQualityGauge = Gauge.builder()
+        //         .name("velocity_server_quality")
+        //         .help("Quality metric for each server based on MSPT and player count")
+        //         .labelNames("server_name")
+        //         .register();
 
-        if (level >= 1) {
-            serverQualityGauge = Gauge.builder()
-                .name("velocity_server_quality")
-                .help("Quality metric for each server based on MSPT and player count")
-                .labelNames("server_name")
-                .register();
+        //     if ( level >= 2) {
+        //         serverMSPTGauge = Gauge.builder()
+        //             .name("velocity_server_mspt")
+        //             .help("MSPT metric for each server")
+        //             .labelNames("server_name")
+        //             .register();
 
-            if ( level >= 2) {
-                serverMSPTGauge = Gauge.builder()
-                    .name("velocity_server_mspt")
-                    .help("MSPT metric for each server")
-                    .labelNames("server_name")
-                    .register();
+        //         serverPlayersGauge = Gauge.builder()
+        //             .name("velocity_server_players")
+        //             .help("Players count for each server")
+        //             .labelNames("server_name")
+        //             .register();
 
-                serverPlayersGauge = Gauge.builder()
-                    .name("velocity_server_players")
-                    .help("Players count for each server")
-                    .labelNames("server_name")
-                    .register();
+        //         serverChunksGauge = Gauge.builder()
+        //             .name("velocity_server_chunks")
+        //             .help("Owned chunks count for each server")
+        //             .labelNames("server_name")
+        //             .register();
+        //     }
 
-                serverChunksGauge = Gauge.builder()
-                    .name("velocity_server_chunks")
-                    .help("Owned chunks count for each server")
-                    .labelNames("server_name")
-                    .register();
-            }
-
-            try {
-                HTTPServer server = HTTPServer.builder()
-                        .port(9400)
-                        .buildAndStart();
-                logger.info("HTTPServer listening on port http://localhost:{}/metrics", server.getPort());
-            } catch (IOException e) {
-                logger.error("Failed to start Prometheus HTTP server: {}", e.getMessage());
-            }
-        }
+        //     try {
+        //         HTTPServer server = HTTPServer.builder()
+        //                 .port(9400)
+        //                 .buildAndStart();
+        //         logger.info("HTTPServer listening on port http://localhost:{}/metrics", server.getPort());
+        //     } catch (IOException e) {
+        //         logger.error("Failed to start Prometheus HTTP server: {}", e.getMessage());
+        //     }
+        // }
     }
 
     @Override
@@ -149,18 +148,18 @@ public class MetricReporter extends BaseStrategy {
         // Primer es posa a zero el darrer valor i a la següent crida s'elimina el gauge
 
         // Si el servidor s'ha posat a zero, ha d'estar a la llista per eliminar els gauges
-        if (level >= 1) {
-            for (String serverName : toRemoveServers) {
-                serverQualityGauge.remove(serverName);
-                if (level >= 2) {
-                    serverMSPTGauge.remove(serverName);
-                    serverPlayersGauge.remove(serverName);
-                    serverChunksGauge.remove(serverName);
-                }
-                logger.info("Removed metric gauges for server: {}", serverName);
-            }
-            toRemoveServers.clear();
-        }
+        // if (level >= 1) {
+        //     for (String serverName : toRemoveServers) {
+        //         serverQualityGauge.remove(serverName);
+        //         if (level >= 2) {
+        //             serverMSPTGauge.remove(serverName);
+        //             serverPlayersGauge.remove(serverName);
+        //             serverChunksGauge.remove(serverName);
+        //         }
+        //         logger.info("Removed metric gauges for server: {}", serverName);
+        //     }
+        //     toRemoveServers.clear();
+        // }
 
         // at startup time there are no registered servers...
         if (allServers.size() == 0) {
@@ -173,24 +172,24 @@ public class MetricReporter extends BaseStrategy {
             .collect(Collectors.toSet());
 
         // Posar a zero mètriques dels servidors que ja no existeixen
-        if (level >= 1) {
-            for (String serverName : previousServers) {
-                if (!currentServers.contains(serverName)) {
-                    logger.info("Set to zero metrics for server: {}", serverName);
-                    serverQualityGauge.labelValues(serverName).set(0);
-                    if (level >= 2) {
-                        serverMSPTGauge.labelValues(serverName).set(0);
-                        serverPlayersGauge.labelValues(serverName).set(0);
-                        serverChunksGauge.labelValues(serverName).set(0);
-                    }
-                    toRemoveServers.add(serverName);
-                }
-            }
-        }
+        // if (level >= 1) {
+        //     for (String serverName : previousServers) {
+        //         if (!currentServers.contains(serverName)) {
+        //             logger.info("Set to zero metrics for server: {}", serverName);
+        //             serverQualityGauge.labelValues(serverName).set(0);
+        //             if (level >= 2) {
+        //                 serverMSPTGauge.labelValues(serverName).set(0);
+        //                 serverPlayersGauge.labelValues(serverName).set(0);
+        //                 serverChunksGauge.labelValues(serverName).set(0);
+        //             }
+        //             toRemoveServers.add(serverName);
+        //         }
+        //     }
+        // }
 
         // Actualitzar la llista de servidors anteriors
-        previousServers.clear();
-        previousServers.addAll(currentServers);
+        // previousServers.clear();
+        // previousServers.addAll(currentServers);
 
         Collection<ServerWithData> serversWD = allServers
             .stream()
@@ -221,14 +220,14 @@ public class MetricReporter extends BaseStrategy {
         if (logShow) logger.info("{} active servers, metrics level {}", metrics.size(), level);
         int pcount = 0;
         for (Metrics wmetrics: metrics){
-            if (level >= 1) {
-            serverQualityGauge.labelValues(wmetrics.getName()).set(wmetrics.getQuality());
-                if (level >= 2) {
-                    serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
-                    serverPlayersGauge.labelValues(wmetrics.getName()).set(wmetrics.getPlayers());
-                    serverChunksGauge.labelValues(wmetrics.getName()).set(wmetrics.getChunks());
-                }
-            }
+            // if (level >= 1) {
+            // serverQualityGauge.labelValues(wmetrics.getName()).set(wmetrics.getQuality());
+            //     if (level >= 2) {
+            //         serverMSPTGauge.labelValues(wmetrics.getName()).set(wmetrics.getMspt());
+            //         serverPlayersGauge.labelValues(wmetrics.getName()).set(wmetrics.getPlayers());
+            //         serverChunksGauge.labelValues(wmetrics.getName()).set(wmetrics.getChunks());
+            //     }
+            // }
 
             if (logShow) logger.info("{} {} mspt {} Q {} QT {} P {} OWNC",
             wmetrics.getName(),
