@@ -45,10 +45,6 @@ public class TickLengthV4 extends BaseStrategy {
         super(interval, timeUnit);
     }
 
-    public boolean getStateSCUp() {
-        return scalingUp;
-    }
-
     @Override
     public void onStartup(MultiPaperVelocity plugin) {
         super.onStartup(plugin);
@@ -73,6 +69,7 @@ public class TickLengthV4 extends BaseStrategy {
         if (scalingUp) {
             logger.info("New server registered, enabling scaling again");
             scalingUp = false;
+            plugin.setScalingUp(scalingUp);
         }
     }
 
@@ -164,6 +161,7 @@ public class TickLengthV4 extends BaseStrategy {
             // scaling only if there are not previous operations in place
             if (count < maxServers) {
                 scalingUp = true;
+                plugin.setScalingUp(scalingUp);
                 if (dynamic && redServers > 0) {
                     // To speed up scaling
                     if (redServers < minStep) redServers = minStep;

@@ -16,7 +16,6 @@ import puregero.multipaper.server.velocity.MultiPaperVelocity;
 import puregero.multipaper.server.velocity.ServerWithData;
 import puregero.multipaper.server.velocity.metric.MetricReporter;
 import puregero.multipaper.server.velocity.metric.Metrics;
-import puregero.multipaper.server.velocity.scaling.strategy.TickLengthV4;
 
 public class BalancePlayersStrategyV4 extends BaseStrategy {
 
@@ -76,11 +75,9 @@ public class BalancePlayersStrategyV4 extends BaseStrategy {
         }
 
         // Avoid to run player migrations when scaling up is in progress
-        if (plugin.getScalingStrategy() instanceof TickLengthV4) {
-            if (((TickLengthV4) plugin.getScalingStrategy()).getStateSCUp() && !parallel) {
-                logger.info("Scaling up servers in progress, waiting for player migrations...");
-                return;
-            }
+        if (plugin.getScalingUp()) {
+            logger.info("Scaling up servers in progress, waiting for player migrations...");
+            return;
         }
 
         Map<String, Metrics> metricsMap = metrics.getMetrics().stream()

@@ -50,6 +50,7 @@ public class MultiPaperVelocity {
 
     private int port;
     private boolean balanceNodes;
+    private boolean scalingUp;
 
     private DrainStrategy drainStrategy;
     private ServerSelectionStrategy serverSelectionStrategy;
@@ -110,6 +111,8 @@ public class MultiPaperVelocity {
                 config.getString("server-selection.strategy", "lowest_tick_time"),
                 ServerSelectionStrategy.class
         );
+
+        this.scalingUp = false;
 
         boolean drainServerEnabled = config.getBoolean("drain-server.enabled", true);
         int drainServerPort = Math.toIntExact(config.getLong("drain-server.port", (long) DrainServer.DEFAULT_PORT));
@@ -405,6 +408,14 @@ public class MultiPaperVelocity {
 
     public Strategy getScalingStrategy() {
         return scalingStrategy;
+    }
+
+    public boolean getScalingUp() {
+        return scalingUp;
+    }
+
+    public void setScalingUp(boolean scalingU) {
+        this.scalingUp = scalingU;
     }
 
     public boolean executeDrainStrategy(String serverName) {
