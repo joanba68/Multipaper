@@ -39,7 +39,7 @@ strategy = "balance_players_strategy_v4"
 interval = 20
 minServers = 1
 maxPlayers = 10
-parallel = false
+parallel = true
 
 [metric]
 strategy = "metric_reporter"
