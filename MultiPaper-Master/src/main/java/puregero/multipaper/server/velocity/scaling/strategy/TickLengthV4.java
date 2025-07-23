@@ -149,7 +149,7 @@ public class TickLengthV4 extends BaseStrategy {
         logger.info("Servers with degraded tick time: {}", counterBad);
         redServers      = (long) Math.round(red * (double) allServers.size());
         logger.info("Required servers for scale up: {}", redServers);
-        logger.info("Scaling up if quality > {}", (int) Math.round(qualityT * (1 + scaleUpRatio)));
+        logger.info("Degraded if quality > {}", (int) Math.round(qualityT * (1 + scaleUpRatio)));
 
         // From here, we have servers with degraded tick time and enough servers to migrate players
         // if too many servers are degraded, no need to migrate, should be scale up from scaling manager
